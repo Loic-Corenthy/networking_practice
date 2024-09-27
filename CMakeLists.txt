@@ -19,4 +19,8 @@ set(ASIO_CMAKE_ASIO_TAG asio-1-31-0)
 FetchContent_MakeAvailable(asio)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/build/${CMAKE_BUILD_TYPE}/_deps/asio-src")
 
-add_subdirectory(example1)
+string(TOLOWER ${CMAKE_BUILD_TYPE} LOCAL_BUILD_TYPE_LOWER)
+
+add_subdirectory(Example1)
+add_subdirectory(NetCommon)
+add_subdirectory(NetClient)
