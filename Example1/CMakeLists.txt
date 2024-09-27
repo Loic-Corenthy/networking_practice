@@ -5,11 +5,14 @@ target_sources(example1
     src/main.cpp
 )
 
-string(TOLOWER ${CMAKE_BUILD_TYPE} LOCAL_BUILD_TYPE_LOWER)
-
 target_include_directories(example1
   PRIVATE
     ${CMAKE_SOURCE_DIR}/build/${LOCAL_BUILD_TYPE_LOWER}/_deps/asio-src/asio/include
+)
+
+target_link_libraries(example1
+  PRIVATE
+  NetCommon
 )
 
 target_compile_features(example1

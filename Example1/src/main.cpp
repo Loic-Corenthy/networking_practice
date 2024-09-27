@@ -1,12 +1,12 @@
+#include "NetCommon.hpp"
+#include "NetMessage.hpp"
+
 #include <iostream>
 #include <string>
 #include <vector>
 #include <chrono>
 
-#define ASIO_STANDALONE
-#include <asio.hpp>
-#include <asio/ts/buffer.hpp>
-#include <asio/ts/internet.hpp>
+
 
 using std::cout;
 using std::string;
@@ -32,11 +32,20 @@ void grabSomeData(asio::ip::tcp::socket& socket, vector<char>& buffer)
     socket.async_read_some(asio::buffer(buffer.data(), buffer.size()), readAvailableData);
 }
 
+enum class HeaderID : uint32_t
+{
+    Connect
+};
+
 int main()
 {
-    vector<char> generic_buffer(20 * 1024);
+    vector<char> generic_buffer(1 * 1024);
     asio::error_code ec;
     asio::io_context context;
+
+    asio::io_context::work idle_work(context);
+
+    auto context_thread = std::thread([&context]() { context.run(); });
 
     // asio::ip::tcp::endpoint endpoint(asio::ip::make_address("93.184.215.14", ec), 80);
     // asio::ip::tcp::endpoint endpoint(asio::ip::make_address("127.0.0.1", ec), 80);
@@ -57,33 +66,29 @@ int main()
 
     if (socket.is_open())
     {
+        grabSomeData(socket, generic_buffer);
+
         string request = "GET /index.html HTTP/1.1\r\n"
                          "Host: example.com\r\n"
                          "Connection: close\r\n\r\n";
 
         socket.write_some(asio::buffer(request.data(), request.size()), ec);
+
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(20s);
+
         
-        // using namespace std::chrono_literals;
-        // std::this_thread::sleep_for(200ms);
-        socket.wait(socket.wait_read);
 
-        const std::size_t bytes = socket.available();
-        cout << "Bytes available: " << bytes << '\n';
-
-        if (bytes > 0)
-        {
-            std::vector<char> socket_buffer(bytes);
-            socket.read_some(asio::buffer(socket_buffer.data(), socket_buffer.size()), ec);
-
-            for (const auto ch : socket_buffer)
-            {
-                cout << ch;
-            }
-        }
-        
     }
     
+    context.stop();
+    
+    context_thread.join();
 
     /* code */
+
+    LCNS::Net::Message<HeaderID> message;
+
+    cout << message;
     return 0;
 }
