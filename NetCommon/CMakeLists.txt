@@ -4,6 +4,9 @@ target_sources(NetCommon
   INTERFACE
     include/NetCommon.hpp
     include/NetMessage.hpp
+    include/NetConnection.hpp
+    include/NetServer.hpp
+    include/NetClient.hpp
 )
 
 target_include_directories(NetCommon

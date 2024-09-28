@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <type_traits>
+#include <memory>
 
 namespace LCNS::Net
 {
@@ -66,6 +67,25 @@ namespace LCNS::Net
     std::ostream& operator<<(std::ostream& os, const Message<HeaderId_t>& message)
     {
         os << "ID: " << static_cast<std::underlying_type_t<HeaderId_t>>(message.header.id) << " Size: " << message.size() << '\n';
+
+        return os;
+    }
+
+    template<typename HeaderId_t>
+    class Connection;
+
+    template<typename HeaderId_t>
+    struct OwnedMessage
+    {
+        std::shared_ptr<Connection<HeaderId_t>> remote;
+        Message<HeaderId_t> msg;
+
+    };
+
+    template <typename HeaderId_t>
+    std::ostream& operator<<(std::ostream& os, const OwnedMessage<HeaderId_t>& message)
+    {
+        os << message.msg;
 
         return os;
     }

@@ -1,5 +1,7 @@
 #include "NetCommon.hpp"
 #include "NetMessage.hpp"
+#include "NetClient.hpp"
+#include "NetServer.hpp"
 
 #include <iostream>
 
@@ -7,6 +9,21 @@ enum class CustomMessageType : uint32_t
 {
     FireBullet,
     MovePlayer
+};
+
+class CustomClient : public LCNS::Net::ClientInterface<CustomMessageType>
+{
+public:
+    bool fire_bullet(float x, float y)
+    {
+        LCNS::Net::Message<CustomMessageType> message;
+        message.header.id = CustomMessageType::FireBullet;
+
+        message << x << y;
+        send(message);
+
+        return true;
+    }
 };
 
 struct Test
@@ -18,28 +35,10 @@ struct Test
 
 int main()
 {
-    LCNS::Net::Message<CustomMessageType> message;
+    CustomClient client;
 
-    message.header.id = CustomMessageType::FireBullet;
+    client.connect("community.onelonecoder.com", 60000);
+    client.fire_bullet(10.0f, 20.0f);
 
-    int a = 1;
-    bool b = true;
-    float c = 3.141592f;
-
-    Test d[5];
-
-    for (std::size_t i = 0; i < 5; ++i)
-    {
-        d[i].x = static_cast<float>(i+1);
-        d[i].y = static_cast<float>(i*2);
-    }
-
-    message << a << b << c << d;
-
-    int aa = 0;
-    bool bb = false;
-    float cc = 1.78f;
-    Test dd[5];
-    message >> dd >> cc >> bb >> aa;
     return 0;
 }
