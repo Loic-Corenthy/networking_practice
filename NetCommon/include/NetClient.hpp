@@ -26,16 +26,17 @@ namespace LCNS::Net
         {
             try
             {
-                // Create connection
-                _connection = std::make_unique<Connection<HeaderId_t>>();  // TODO
+                // const auto owner = Connection<HeaderId_t>::Owner::client;
+                // // Create connection
+                // _connection = std::make_unique<Connection<HeaderId_t>>(owner, _context, _socket, _message_in_queue);  // TODO
 
                 asio::ip::tcp::resolver resolver(_context);
 
                 auto endpoints = resolver.resolve(host, std::to_string(port));
 
-                _connection->connect_to_server(endpoints);
+                // _connection->connect_to_server(endpoints);
 
-                _context_thread = std::thread([this]() { _context.run(); });
+                // _context_thread = std::thread([this]() { _context.run(); });
             }
             catch (const std::exception& e)
             {
@@ -74,6 +75,14 @@ namespace LCNS::Net
             return false;
         }
 
+        void send(const Message<HeaderId_t>& message)
+        {
+            if (is_connected())
+            {
+                _connection->send(message);
+            }
+        }
+
         TSQueue<OwnedMessage<HeaderId_t>>& incoming_queue() { return _message_in_queue; }
 
     protected:
@@ -82,8 +91,6 @@ namespace LCNS::Net
         std::thread _context_thread;
 
         asio::ip::tcp::socket _socket;
-
-        // asio::ip::tcp::endpoint _endpoint;
 
         std::unique_ptr<Connection<HeaderId_t>> _connection;
 

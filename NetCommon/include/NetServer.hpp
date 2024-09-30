@@ -62,21 +62,21 @@ namespace LCNS::Net
                 {
                     std::cout << "[SERVER] New connection: " << socket.remote_endpoint() << '\n';
 
-                    // auto new_connection = std::make_shared<Connection<HeaderId_t>>(
-                    // Connection<HeaderId_t>::owner::server, _asio_context, std::move(socket), _message_in_queue);
+                    auto new_connection = std::make_shared<Connection<HeaderId_t>>(
+                    Connection<HeaderId_t>::Owner::server, _asio_context, std::move(socket), _message_in_queue);
 
-                    // if (on_client_connect(new_connection))
-                    // {
-                    //     _all_connections.push_back(std::move(new_connection));
+                    if (on_client_connect(new_connection))
+                    {
+                        _all_connections.push_back(std::move(new_connection));
 
-                    //     _all_connections.back()->connect_to_client(_id_counter++);
+                        _all_connections.back()->connect_to_client(_id_counter++);
 
-                    //     std::cout << "[" << _all_connections.back()->get_id() << "] Connection approved\n";
-                    // }
-                    // else
-                    // {
-                    //     std::cout << "[SERVER] Connection denied\n";
-                    // }
+                        std::cout << "[" << _all_connections.back()->client_id() << "] Connection approved\n";
+                    }
+                    else
+                    {
+                        std::cout << "[SERVER] Connection denied\n";
+                    }
                 }
                 else
                 {

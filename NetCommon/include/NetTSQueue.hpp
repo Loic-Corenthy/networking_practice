@@ -11,7 +11,7 @@ namespace LCNS::Net
     class TSQueue
     {
     public:
-        TSQueue() = default;
+        TSQueue()               = default;
         TSQueue(const TSQueue&) = delete;
 
         const T& front() const
@@ -59,7 +59,7 @@ namespace LCNS::Net
         T pop_front()
         {
             std::scoped_lock lk(_mutex);
-            const auto t = _queue.front();
+            const auto       t = _queue.front();
             _queue.pop_front();
             return t;
         }
@@ -67,13 +67,14 @@ namespace LCNS::Net
         T pop_back()
         {
             std::scoped_lock lk(_mutex);
-            const auto t = _queue.back();
+            const auto       t = _queue.back();
             _queue.pop_back();
             return t;
         }
+
     private:
-        std::mutex    _mutex;
-        std::deque<T> _queue;
+        mutable std::mutex _mutex;
+        std::deque<T>      _queue;
     };
 
 }  // namespace LCNS::Net
