@@ -12,7 +12,6 @@ namespace LCNS::Net
     public:
         enum class Owner
         {
-            undefined,
             server,
             client
         };
@@ -30,7 +29,27 @@ namespace LCNS::Net
 
         };
 
-        bool connect_to_server([[maybe_unused]] const asio::ip::tcp::resolver::results_type& endpoints) { return false; }
+        bool connect_to_server(const asio::ip::tcp::resolver::results_type& endpoints)
+        {
+            // Only clients can connect to a server
+            if (_owner != Owner::client)
+            {
+                return false;
+            }
+
+            auto work = [this](std::error_code ec,[[maybe_unused]] asio::ip::tcp::endpoint endpoint){
+
+                if (!ec)
+                {
+                    read_header();
+                }
+                
+            };
+
+            asio::async_connect(_socket, endpoints, work);
+
+            return true;
+        }
 
         void disconnect()
         {
@@ -39,7 +58,6 @@ namespace LCNS::Net
                 auto action = [this]() { _socket.close(); };
                 asio::post(_asio_context, action);
             }
-
         }
 
         bool is_connected() const
@@ -94,7 +112,7 @@ namespace LCNS::Net
 
         TSQueue<OwnedMessage<HeaderId_t>>& _message_in_queue;
 
-        Owner _owner = Owner::undefined;
+        Owner _owner;
 
         uint32_t _client_id = 0u;
 
@@ -194,7 +212,7 @@ namespace LCNS::Net
                     _socket.close();
                 }
             };
-            asio::async_write(_socket, asio::buffer(&_message_out_queue.front().body.data(), _message_out_queue.front().body.size()), work);
+            asio::async_write(_socket, asio::buffer(_message_out_queue.front().body.data(), _message_out_queue.front().body.size()), work);
         }
 
         void add_to_incoming_message_queue()

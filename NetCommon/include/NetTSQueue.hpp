@@ -29,13 +29,13 @@ namespace LCNS::Net
         void push_back(T item)
         {
             std::scoped_lock lk(_mutex);
-            _queue.push_back(std::forward(item));
+            _queue.push_back(std::forward<T>(item));
         }
 
         void push_front(T item)
         {
             std::scoped_lock lk(_mutex);
-            _queue.push_front(std::forward(item));
+            _queue.push_front(std::forward<T>(item));
         }
 
         bool is_empty() const

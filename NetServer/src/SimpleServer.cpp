@@ -34,9 +34,18 @@ protected:
 
     virtual void on_client_disconnect([[maybe_unused]] std::shared_ptr<Connection<CustomMessageTypes>> client) override {}
 
-    virtual void on_message([[maybe_unused]] std::shared_ptr<Connection<CustomMessageTypes>> client,
-                            [[maybe_unused]] Message<CustomMessageTypes>&                    message) override
+    virtual void on_message(std::shared_ptr<Connection<CustomMessageTypes>> client, Message<CustomMessageTypes>& message) override
     {
+        switch (message.header.id)
+        {
+            case CustomMessageTypes::server_ping:
+                std::cout << "[SERVER] Client: " << client->client_id() << " Server ping\n";
+                client->send(message);
+                break;
+
+            default:
+                break;
+        }
     }
 };
 

@@ -26,17 +26,17 @@ namespace LCNS::Net
         {
             try
             {
-                // const auto owner = Connection<HeaderId_t>::Owner::client;
-                // // Create connection
-                // _connection = std::make_unique<Connection<HeaderId_t>>(owner, _context, _socket, _message_in_queue);  // TODO
-
+                // Create endpoint from full host url
                 asio::ip::tcp::resolver resolver(_context);
-
                 auto endpoints = resolver.resolve(host, std::to_string(port));
 
-                // _connection->connect_to_server(endpoints);
+                // Create connection
+                const auto owner = Connection<HeaderId_t>::Owner::client;
+                _connection = std::make_unique<Connection<HeaderId_t>>(owner, _context, asio::ip::tcp::socket(_context), _message_in_queue);
 
-                // _context_thread = std::thread([this]() { _context.run(); });
+                _connection->connect_to_server(endpoints);
+
+                _context_thread = std::thread([this]() { _context.run(); });
             }
             catch (const std::exception& e)
             {
