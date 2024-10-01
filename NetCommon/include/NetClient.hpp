@@ -15,7 +15,6 @@ namespace LCNS::Net
     {
     public:
         ClientInterface()
-        : _socket(_context)
         {
         }
 
@@ -89,8 +88,6 @@ namespace LCNS::Net
         asio::io_context _context;
 
         std::thread _context_thread;
-
-        asio::ip::tcp::socket _socket;
 
         std::unique_ptr<Connection<HeaderId_t>> _connection;
 

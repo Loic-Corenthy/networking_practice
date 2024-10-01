@@ -21,7 +21,11 @@ namespace LCNS::Net
         {
         }
 
-        virtual ~ServerInterface() { stop(); }
+        virtual ~ServerInterface()
+        {
+            // Tidy up
+            stop();
+        }
 
         bool start()
         {

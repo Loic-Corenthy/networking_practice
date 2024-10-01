@@ -90,7 +90,7 @@ int main()
         {
             if (!client.incoming_queue().is_empty())
             {
-                auto message = client.incoming_queue().front().msg;
+                auto message = client.incoming_queue().pop_front().msg;
 
                 switch (message.header.id)
                 {

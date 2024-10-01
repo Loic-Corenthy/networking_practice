@@ -29,12 +29,12 @@ namespace LCNS::Net
 
         };
 
-        bool connect_to_server(const asio::ip::tcp::resolver::results_type& endpoints)
+        void connect_to_server(const asio::ip::tcp::resolver::results_type& endpoints)
         {
             // Only clients can connect to a server
             if (_owner != Owner::client)
             {
-                return false;
+                return;
             }
 
             auto work = [this](std::error_code ec,[[maybe_unused]] asio::ip::tcp::endpoint endpoint){
@@ -43,12 +43,10 @@ namespace LCNS::Net
                 {
                     read_header();
                 }
-                
+
             };
 
             asio::async_connect(_socket, endpoints, work);
-
-            return true;
         }
 
         void disconnect()
@@ -66,14 +64,15 @@ namespace LCNS::Net
             return _socket.is_open();
         }
 
-        bool send([[maybe_unused]] const Message<HeaderId_t>& message)
+        bool send(const Message<HeaderId_t>& message)
         {
-            auto work = [this, &message]()
+            auto work = [this, message]()
             {
+                const auto out_queue_is_empty = _message_out_queue.is_empty();
                 _message_out_queue.push_back(message);
 
                 // Only add work to the context if it's not already busy
-                if (_message_out_queue.is_empty())
+                if (out_queue_is_empty)
                 {
                     write_header();
                 }
@@ -82,7 +81,7 @@ namespace LCNS::Net
             asio::post(_asio_context, work);
 
 
-            return false;
+            return true;
         }
 
         uint32_t client_id() const
