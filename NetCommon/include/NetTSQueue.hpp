@@ -81,11 +81,17 @@ namespace LCNS::Net
 
         void wait()
         {
-            while (is_empty())
+            while (is_empty() && !_force_stop_waiting.load())
             {
                 std::unique_lock<std::mutex> lock(_wait_for_work_mutex);
                 _wait_for_work.wait(lock);
             }
+        }
+
+        void force_stop_waiting()
+        {
+            _force_stop_waiting.store(true);
+            _wait_for_work.notify_all();
         }
 
     private:
@@ -93,6 +99,7 @@ namespace LCNS::Net
         std::mutex              _wait_for_work_mutex;
         std::deque<T>           _queue;
         std::condition_variable _wait_for_work;
+        std::atomic<bool> _force_stop_waiting = false;
     };
 
 }  // namespace LCNS::Net

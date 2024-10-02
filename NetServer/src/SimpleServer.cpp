@@ -50,18 +50,19 @@ protected:
 };
 
 std::atomic<bool> run = true;
+CustomServer server(60000);
 
 void signal_callback_handler(int signum)
 {
     cout << "\nCaught signal " << signum << '\n';
     run.store(false);
+    server.force_stop_waiting_in_queue();
 }
 
 int main()
 {
     signal(SIGINT, signal_callback_handler);
 
-    CustomServer server(60000);
     server.start();
 
 
@@ -70,7 +71,6 @@ int main()
         server.update(10'000'000u, true);
     }
 
-    // server.stop();
 
     return 0;
 }

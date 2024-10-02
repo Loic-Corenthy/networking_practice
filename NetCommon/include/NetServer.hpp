@@ -154,6 +154,12 @@ namespace LCNS::Net
             }
         }
 
+        void force_stop_waiting_in_queue()
+        {
+            std::cout << "force stop waiting in queue\n";
+            _message_in_queue.force_stop_waiting();
+        }
+
     protected:
         virtual bool on_client_connect([[maybe_unused]] std::shared_ptr<Connection<HeaderId_t>> client) { return false; }
 
