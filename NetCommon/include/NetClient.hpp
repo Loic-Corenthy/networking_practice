@@ -7,6 +7,7 @@
 
 #include <thread>
 #include <memory>
+#include <iostream>
 
 namespace LCNS::Net
 {
@@ -21,7 +22,7 @@ namespace LCNS::Net
         virtual ~ClientInterface() { Disconnect(); }
 
 
-        bool connect([[maybe_unused]] const std::string& host, [[maybe_unused]] const uint16_t port)
+        bool connect(const std::string& host, const uint16_t port)
         {
             try
             {
@@ -78,6 +79,7 @@ namespace LCNS::Net
         {
             if (is_connected())
             {
+                std::cout << "Client sending message to connection\n";
                 _connection->send(message);
             }
         }

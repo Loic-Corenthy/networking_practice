@@ -60,7 +60,8 @@ namespace LCNS::Net
     template <typename HeaderId_t>
     std::size_t Message<HeaderId_t>::size() const
     {
-        return sizeof(MessageHeader<HeaderId_t>) + body.size();
+        // return sizeof(MessageHeader<HeaderId_t>) + body.size();
+        return body.size();
     }
 
     template <typename HeaderId_t>

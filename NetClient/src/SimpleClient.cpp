@@ -100,7 +100,7 @@ int main()
                         std::chrono::steady_clock::time_point then;
                         message >> then;
 
-                        cout << "Time to reply is " << std::chrono::duration<double>(now - then).count() << '\n';
+                        cout << "Ping:  " << std::chrono::duration_cast<std::chrono::milliseconds>(now - then).count() << '\n';
                     }
                     break;
 

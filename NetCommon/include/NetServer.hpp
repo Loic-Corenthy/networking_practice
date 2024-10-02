@@ -135,8 +135,13 @@ namespace LCNS::Net
             }
         }
 
-        void update(std::size_t max_messages = std::numeric_limits<std::size_t>::max())
+        void update(std::size_t max_messages = std::numeric_limits<std::size_t>::max(), bool wait = false)
         {
+            if (wait)
+            {
+                _message_in_queue.wait();
+            }
+
             std::size_t message_count = 0;
 
             while (message_count < max_messages && !_message_in_queue.is_empty())

@@ -25,7 +25,7 @@ class CustomServer : public ServerInterface<CustomMessageTypes>
 {
 public:
     CustomServer(uint16_t port)
-    : ServerInterface(port)
+    : ServerInterface<CustomMessageTypes>(port)
     {
     }
 
@@ -49,12 +49,12 @@ protected:
     }
 };
 
-bool run = true;
+std::atomic<bool> run = true;
 
 void signal_callback_handler(int signum)
 {
-    cout << "Caught signal " << signum << '\n';
-    run = false;
+    cout << "\nCaught signal " << signum << '\n';
+    run.store(false);
 }
 
 int main()
@@ -65,11 +65,9 @@ int main()
     server.start();
 
 
-    while (run)
+    while (run.load())
     {
-        server.update();
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(200ms);
+        server.update(10'000'000u, true);
     }
 
     // server.stop();
