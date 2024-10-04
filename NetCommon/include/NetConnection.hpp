@@ -42,8 +42,8 @@ namespace LCNS::Net
             {
                 if (_socket.is_open())
                 {
-                    std::cout << "Connect to client " << _client_id << '\n';
                     _client_id = client_id;
+                    std::cout << "Connect to client " << _client_id << '\n';
                     read_header();
                 }
             }
@@ -61,7 +61,7 @@ namespace LCNS::Net
             {
                 if (!ec)
                 {
-                    std::cout << _client_id << " connects to server\n";
+                    std::cout << " connects to server\n";
                     read_header();
                 }
             };
@@ -129,7 +129,7 @@ namespace LCNS::Net
 
                 if (!ec)
                 {
-                    std::cout << "Writing header\n";
+                    // std::cout << "Writing header\n";
                     if (_message_out_queue.front().body.size() > 0u)
                     {
                         write_body();
@@ -160,7 +160,7 @@ namespace LCNS::Net
             {
                 if (!ec)
                 {
-                    std::cout << "Writing body\n";
+                    // std::cout << "Writing body\n";
                     _message_out_queue.pop_front();
 
                     if (!_message_out_queue.is_empty())
@@ -184,7 +184,7 @@ namespace LCNS::Net
             {
                 if (!ec)
                 {
-                    std::cout << "Reading header\n";
+                    // std::cout << "Reading header\n";
                     if (_tmp_message_in.header.size > 0u)
                     {
                         _tmp_message_in.body.resize(_tmp_message_in.header.size);
@@ -212,7 +212,7 @@ namespace LCNS::Net
             {
                 if (!ec)
                 {
-                    std::cout << "Reading body\n";
+                    // std::cout << "Reading body\n";
                     add_to_incoming_message_queue();
                 }
                 else
@@ -229,12 +229,12 @@ namespace LCNS::Net
             switch (_owner)
             {
                 case Owner::server:
-                    std::cout << "Server adds message to incoming queue\n";
+                    // std::cout << "Server adds message to incoming queue\n";
                     _message_in_queue.push_back({ this->shared_from_this(), _tmp_message_in });
                     break;
 
                 case Owner::client:
-                    std::cout << "Client adds message to incoming queue\n";
+                    // std::cout << "Client adds message to incoming queue\n";
                     _message_in_queue.push_back({ nullptr, _tmp_message_in });
                     break;
             }
