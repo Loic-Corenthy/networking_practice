@@ -79,7 +79,7 @@ namespace LCNS::Net
         {
             if (is_connected())
             {
-                std::cout << "Client sending message to connection\n";
+                // std::cout << "Client sending message to connection\n";
                 _connection->send(message);
             }
         }

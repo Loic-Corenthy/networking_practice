@@ -9,6 +9,9 @@
 namespace LCNS::Net
 {
     template <typename HeaderId_t>
+    class ServerInterface;
+
+    template <typename HeaderId_t>
     class Connection : public std::enable_shared_from_this<Connection<HeaderId_t>>
     {
     public:
@@ -26,6 +29,18 @@ namespace LCNS::Net
         {
             std::cout << "Constructor Connection for " << (owner == Owner::server ? "SERVER\n" : "CLIENT\n");
             _owner = owner;
+
+            switch (_owner)
+            {
+                case Owner::server:
+                    _hand_shake_out   = static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count());
+                    _hand_shake_check = scramble(_hand_shake_out);
+                    break;
+
+                case Owner::client:
+                    // Nothing to do
+                    break;
+            }
         }
 
         virtual ~Connection() {}
@@ -36,15 +51,17 @@ namespace LCNS::Net
             return _client_id;
         }
 
-        void connect_to_client(uint32_t client_id = 0)
+        void connect_to_client(ServerInterface<HeaderId_t>* server, uint32_t client_id = 0)
         {
             if (_owner == Owner::server)
             {
                 if (_socket.is_open())
                 {
                     _client_id = client_id;
-                    std::cout << "Connect to client " << _client_id << '\n';
-                    read_header();
+                    write_validation();
+                    read_validation(server);
+                    // std::cout << "Connect to client " << _client_id << '\n';
+                    // read_header();
                 }
             }
         }
@@ -61,8 +78,9 @@ namespace LCNS::Net
             {
                 if (!ec)
                 {
-                    std::cout << " connects to server\n";
-                    read_header();
+                    read_validation();
+                    // std::cout << " connects to server\n";
+                    // read_header();
                 }
             };
 
@@ -88,7 +106,7 @@ namespace LCNS::Net
         {
             auto work = [this, message]()
             {
-                std::cout << "Sending message to message outgoing queue\n";
+                // std::cout << "Sending message to message outgoing queue\n";
                 const auto out_queue_is_empty = _message_out_queue.is_empty();
                 _message_out_queue.push_back(message);
 
@@ -103,6 +121,13 @@ namespace LCNS::Net
 
 
             return true;
+        }
+
+        uint64_t scramble(uint64_t input)
+        {
+            uint64_t output = input ^ 0xDEADBEEF;
+            output          = (output & 0xF0F0F0F0) >> 4 | (output & 0x0F0F0F0F) << 4;
+            return output ^ 0xC0DEFACE;
         }
 
     protected:
@@ -120,13 +145,79 @@ namespace LCNS::Net
 
         uint32_t _client_id = 0u;
 
+        uint64_t _hand_shake_out   = 0;
+        uint64_t _hand_shake_in    = 0;
+        uint64_t _hand_shake_check = 0;
+
     private:
+        void write_validation()
+        {
+            auto work = [this](std::error_code ec, [[maybe_unused]] std::size_t length)
+            {
+                if (!ec)
+                {
+                    if (_owner == Owner::client)
+                    {
+                        read_header();
+                    }
+                }
+                else
+                {
+                    std::cerr << "Write validation failed\n";
+                    _socket.close();
+                }
+            };
+
+            asio::async_write(_socket, asio::buffer(&_hand_shake_out, sizeof(uint64_t)), work);
+        }
+
+        void read_validation(ServerInterface<HeaderId_t>* server = nullptr)
+        {
+            auto work = [this, server](std::error_code ec, [[maybe_unused]] std::size_t length)
+            {
+                if (!ec)
+                {
+                    switch (_owner)
+                    {
+                        case Owner::server:
+                            if (_hand_shake_in == _hand_shake_check)
+                            {
+                                std::cout << "Client validated correctly\n";
+                                server->on_client_validated(this->shared_from_this());
+
+                                read_header();
+                            }
+                            else
+                            {
+                                std::cout << "Client validation failed\n";
+                                _socket.close();
+                            }
+
+                            break;
+
+                        case Owner::client:
+                            _hand_shake_out = scramble(_hand_shake_in);
+
+                            write_validation();
+                            break;
+                    }
+                }
+                else
+                {
+                    std::cerr << "Read validation failed\n";
+                    _socket.close();
+                }
+            };
+
+
+            asio::async_read(_socket, asio::buffer(&_hand_shake_in, sizeof(uint64_t)), work);
+        }
+
         // ASYNC function!
         void write_header()
         {
             auto work = [this](std::error_code ec, [[maybe_unused]] std::size_t length)
             {
-
                 if (!ec)
                 {
                     // std::cout << "Writing header\n";
@@ -241,7 +332,6 @@ namespace LCNS::Net
 
             read_header();
         }
-
     };
 
 }  // namespace LCNS::Net

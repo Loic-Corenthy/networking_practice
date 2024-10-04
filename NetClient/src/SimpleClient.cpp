@@ -29,8 +29,21 @@ public:
         LCNS::Net::Message<CustomMessageType> message;
         message.header.id = CustomMessageType::server_ping;
 
-        const auto now = std::chrono::steady_clock::now();
-        message << now;
+        const auto now = std::chrono::system_clock::now();
+
+        // cout << "Before sending the message " << std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() << '\n';
+
+        const auto value = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+
+        message << value;
+        send(message);
+    }
+
+    void message_all()
+    {
+        LCNS::Net::Message<CustomMessageType> message;
+        message.header.id = CustomMessageType::message_all;
+
         send(message);
     }
 };
@@ -61,7 +74,8 @@ void keypress(std::atomic<bool>& run, CustomClient& client)
                 break;
 
             case '2':
-
+                cout << "Sending message to all other clients\n";
+                client.message_all();
                 break;
 
             case '3':
@@ -94,13 +108,25 @@ int main()
 
                 switch (message.header.id)
                 {
+                    case CustomMessageType::server_accept:
+                        cout << "Server has accepted connection\n";
+                        break;
+
                     case CustomMessageType::server_ping:
                     {
-                        const auto                            now = std::chrono::steady_clock::now();
-                        std::chrono::steady_clock::time_point then;
+                        const auto now = std::chrono::system_clock::now();
+                        int64_t    then;
                         message >> then;
 
-                        cout << "Ping:  " << std::chrono::duration_cast<std::chrono::milliseconds>(now - then).count() << '\n';
+                        cout << "Ping:  " << std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() - then << '\n';
+                    }
+                    break;
+
+                    case CustomMessageType::server_message:
+                    {
+                        uint32_t id;
+                        message >> id;
+                        cout << "Hello from client [" << id << "]\n";
                     }
                     break;
 

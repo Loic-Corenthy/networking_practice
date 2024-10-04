@@ -73,7 +73,7 @@ namespace LCNS::Net
                     {
                         _all_connections.push_back(std::move(new_connection));
 
-                        _all_connections.back()->connect_to_client(_id_counter++);
+                        _all_connections.back()->connect_to_client(this, _id_counter++);
 
                         std::cout << "[" << _all_connections.back()->client_id() << "] Connection approved\n";
                     }
@@ -158,6 +158,11 @@ namespace LCNS::Net
         {
             std::cout << "force stop waiting in queue\n";
             _message_in_queue.force_stop_waiting();
+        }
+
+        void on_client_validated([[maybe_unused]] std::shared_ptr<Connection<HeaderId_t>> client)
+        {
+
         }
 
     protected:
