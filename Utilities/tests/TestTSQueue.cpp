@@ -7,86 +7,227 @@
 #include <thread>
 #include <stdio.h>
 
-using LCNS::TS::Queue1;
+using LCNS::ThreadSafe::Queue1;
 
 // using Catch::Generators::random;
 
-void producer(Queue1<int>& queue, const std::size_t test_count)
-{
-    for (std::size_t i = 0; i < test_count; ++i)
-    {
-        queue.push_back(i);
-    }
-}
+using std::jthread;
 
-void consumer(Queue1<int>& queue, int& tested_items)
+void producer(Queue1<int>& queue, const int test_count)
 {
-    tested_items = 0;
-    while (!queue.is_empty())
+    printf("Adding %d elements to the queue\n", test_count);
+
+    for (int i = 0; i < test_count; ++i)
     {
-        const auto val = queue.pop_front();
-        CHECK((-1000 <= val && val <= 1000));
-        tested_items++;
+        queue.push(i);
     }
 }
 
 TEST_CASE("1 producer - 1 consumer", "[queue][mutex]")
 {
     Queue1<int> tsq1;
-    const std::size_t   test_count = 1000;
+    const int   test_count = 1000;
 
-    BENCHMARK("1000 elements")
+    GIVEN("1000 elements being added to the queue")
     {
         std::jthread tp1(producer, std::ref(tsq1), test_count);
 
-        int          tested_items = 0;
-        std::jthread tc(consumer, std::ref(tsq1), std::ref(tested_items));
+        THEN("The same number of elements can be retrieved asynchronously from a different thread using \"try_pop\"")
+        {
+            auto consumer = [](Queue1<int>& queue, int& tested_items)
+            {
+                while (tested_items < test_count)
+                {
+                    int value = std::numeric_limits<int>::max();
+                    if (queue.try_pop(value))
+                    {
+                        CHECK((-1000 <= value && value <= 1000));
+                        tested_items++;
+                    }
+                }
+            };
 
-        return tested_items;
-    };
+            int tested_items = 0u;
+
+            {
+                std::jthread tc(consumer, std::ref(tsq1), std::ref(tested_items));
+            }
+
+            CHECK(tsq1.is_empty());
+        }
+
+        THEN("The same number of elements can be retrieved asynchronously from a different thread")
+        {
+            auto consumer = [](Queue1<int>& queue, int& tested_items)
+            {
+                while (tested_items < test_count)
+                {
+                    int value = std::numeric_limits<int>::max();
+                    queue.wait_and_pop(value);
+
+                    CHECK((-1000 <= value && value <= 1000));
+
+                    tested_items++;
+                }
+            };
+
+            int tested_items = 0;
+
+            {
+                std::jthread tc(consumer, std::ref(tsq1), std::ref(tested_items));
+            }
+
+            CHECK(tsq1.is_empty());
+        }
+    }
 }
 
-
-TEST_CASE("5 producers - 1 consumer", "[queue][mutex]")
+TEST_CASE("1 consumer - 1 producer", "[queue][mutex]")
 {
     Queue1<int> tsq1;
-    const std::size_t   test_count = 1000;
+    const int   test_count = 1234;
 
-    BENCHMARK("1000 elements")
+    GIVEN("A thread ready to consume data from the queue")
     {
-        std::jthread tp1(producer, std::ref(tsq1), test_count);
-        std::jthread tp2(producer, std::ref(tsq1), test_count);
-        std::jthread tp3(producer, std::ref(tsq1), test_count);
-        std::jthread tp4(producer, std::ref(tsq1), test_count);
-        std::jthread tp5(producer, std::ref(tsq1), test_count);
+        auto consumer = [](Queue1<int>& queue, int& tested_items)
+        {
+            while (tested_items < test_count)
+            {
+                int value = std::numeric_limits<int>::max();
+                queue.wait_and_pop(value);
 
-        int          tested_items = 0;
+                CHECK((-test_count <= value && value <= test_count));
+
+                tested_items++;
+            }
+        };
+
+        int tested_items = 0;
+
         std::jthread tc(consumer, std::ref(tsq1), std::ref(tested_items));
 
-        return tested_items;
-    };
+        WHEN("1000 elements are added to the queue")
+        {
+            std::jthread tp1(producer, std::ref(tsq1), test_count);
+
+            THEN("All the elements are eventually used by the consumer")
+            {
+                tc.join();
+
+                CHECK(tsq1.is_empty());
+            }
+        }
+    }
 }
 
-TEST_CASE("5 producers - 5 consumers", "[queue][mutex]")
+TEST_CASE("5 producers - 1 consumer")
 {
     Queue1<int> tsq1;
-    const std::size_t   test_count = 1000;
+    const int   test_count         = 1000;
+    const int   input_thread_count = 5;
 
-    BENCHMARK("1000 elements")
+    GIVEN("5000 elements being added to the queue")
     {
-        std::jthread tp1(producer, std::ref(tsq1), test_count);
-        std::jthread tp2(producer, std::ref(tsq1), test_count);
-        std::jthread tp3(producer, std::ref(tsq1), test_count);
-        std::jthread tp4(producer, std::ref(tsq1), test_count);
-        std::jthread tp5(producer, std::ref(tsq1), test_count);
+        jthread producers[input_thread_count];
+        for (int i = 0; i < input_thread_count; ++i)
+        {
+            producers[i] = jthread(producer, std::ref(tsq1), test_count);
+        }
 
-        int          tested_items = 0;
-        std::jthread tc1(consumer, std::ref(tsq1), std::ref(tested_items));
-        std::jthread tc2(consumer, std::ref(tsq1), std::ref(tested_items));
-        std::jthread tc3(consumer, std::ref(tsq1), std::ref(tested_items));
-        std::jthread tc4(consumer, std::ref(tsq1), std::ref(tested_items));
-        std::jthread tc5(consumer, std::ref(tsq1), std::ref(tested_items));
+        THEN("The same number of elements can be retrieved asynchronously from a different thread using \"try_pop\"")
+        {
+            auto consumer = [](Queue1<int>& queue, int& tested_items)
+            {
+                const auto value_count = test_count * input_thread_count;
 
-        return tested_items;
-    };
+                while (tested_items < value_count)
+                {
+                    if (int value = std::numeric_limits<int>::max(); queue.try_pop(value))
+                    {
+                        CHECK((-value_count <= value && value <= value_count));
+                        tested_items++;
+                    }
+                }
+            };
+
+            int tested_items = 0u;
+
+            {
+                std::jthread tc(consumer, std::ref(tsq1), std::ref(tested_items));
+            }
+
+            CHECK(tsq1.is_empty());
+        }
+
+        THEN("The same number of elements can be retrieved asynchronously from a different thread")
+        {
+            auto consumer = [](Queue1<int>& queue, int& tested_items)
+            {
+                const auto value_count = test_count * input_thread_count;
+
+                while (tested_items < test_count * input_thread_count)
+                {
+                    int value = std::numeric_limits<int>::max();
+                    queue.wait_and_pop(value);
+
+                    CHECK((-value_count <= value && value <= value_count));
+
+                    tested_items++;
+                }
+            };
+
+            int tested_items = 0;
+
+            {
+                std::jthread tc(consumer, std::ref(tsq1), std::ref(tested_items));
+            }
+
+            CHECK(tsq1.is_empty());
+        }
+    }
 }
+
+
+// TEST_CASE("5 producers - 1 consumer", "[queue][mutex]")
+// {
+//     Queue1<int>       tsq1;
+//     const int test_count = 1000;
+
+//     BENCHMARK("1000 elements")
+//     {
+//         std::jthread tp1(producer, std::ref(tsq1), test_count);
+//         std::jthread tp2(producer, std::ref(tsq1), test_count);
+//         std::jthread tp3(producer, std::ref(tsq1), test_count);
+//         std::jthread tp4(producer, std::ref(tsq1), test_count);
+//         std::jthread tp5(producer, std::ref(tsq1), test_count);
+
+//         int          tested_items = 0;
+//         std::jthread tc(consumer, std::ref(tsq1), std::ref(tested_items));
+
+//         return tested_items;
+//     };
+// }
+
+// TEST_CASE("5 producers - 5 consumers", "[queue][mutex]")
+// {
+//     Queue1<int>       tsq1;
+//     const int test_count = 1000;
+
+//     BENCHMARK("1000 elements")
+//     {
+//         std::jthread tp1(producer, std::ref(tsq1), test_count);
+//         std::jthread tp2(producer, std::ref(tsq1), test_count);
+//         std::jthread tp3(producer, std::ref(tsq1), test_count);
+//         std::jthread tp4(producer, std::ref(tsq1), test_count);
+//         std::jthread tp5(producer, std::ref(tsq1), test_count);
+
+//         int          tested_items = 0;
+//         std::jthread tc1(consumer, std::ref(tsq1), std::ref(tested_items));
+//         std::jthread tc2(consumer, std::ref(tsq1), std::ref(tested_items));
+//         std::jthread tc3(consumer, std::ref(tsq1), std::ref(tested_items));
+//         std::jthread tc4(consumer, std::ref(tsq1), std::ref(tested_items));
+//         std::jthread tc5(consumer, std::ref(tsq1), std::ref(tested_items));
+
+//         return tested_items;
+//     };
+// }
