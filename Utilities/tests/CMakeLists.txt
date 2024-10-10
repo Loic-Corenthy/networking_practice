@@ -1,16 +1,19 @@
-add_executable(testTSQueue)
+add_executable(testTSQueue1)
 
-target_sources(testTSQueue
+target_sources(testTSQueue1
     PRIVATE
-        "TestTSQueue.cpp"
+        src/Helper.hpp
+        src/TestTSQueue1.cpp
+        src/BenchmarkTSQueue1.cpp
 )
 
-add_test(NAME "Test queue1" COMMAND "$<TARGET_FILE:testTSQueue>" "[queue]")
+add_test(NAME "Test queue1" COMMAND "$<TARGET_FILE:testTSQueue1>" "[test]")
+add_test(NAME "Benchmark queue1" COMMAND "$<TARGET_FILE:testTSQueue1>" "[benchmark]")
 
 ####################################
 # Setup common to all test targets #
 ####################################
-set(ALL_TEST_TARGETS testTSQueue)
+set(ALL_TEST_TARGETS testTSQueue1)
 
 foreach(TEST_TARGET IN LISTS ALL_TEST_TARGETS)
     target_link_libraries(${TEST_TARGET} PRIVATE Utilities Catch2::Catch2WithMain)
