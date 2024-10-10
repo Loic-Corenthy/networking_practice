@@ -32,7 +32,7 @@ TEST_CASE("Adding elements","[test][internal]")
 
         WHEN("Adding an item")
         {
-            TestData td1(1);
+            TestData td1("td1");
             queue.push(std::move(td1));
 
             THEN("The size increases by 1")
@@ -46,17 +46,16 @@ TEST_CASE("Adding elements","[test][internal]")
 
                 CHECK(queue.try_pop(res));
 
-                CHECK(res.index == 1);
-                CHECK(*res.fl == 3.5f);
+                CHECK(res.name == "td1");
             }
         }
 
         WHEN("Adding multiple items")
         {
-            queue.push(TestData(1));
-            queue.push(TestData(2));
-            queue.push(TestData(3));
-            queue.push(TestData(4));
+            queue.push(TestData("td1"));
+            queue.push(TestData("td2"));
+            queue.push(TestData("td3"));
+            queue.push(TestData("td4"));
 
             THEN("The size increases accordingly")
             {
@@ -72,8 +71,7 @@ TEST_CASE("Adding elements","[test][internal]")
                 CHECK(queue.try_pop(res));
                 CHECK(queue.try_pop(res));
 
-                CHECK(res.index == 4);
-                CHECK(*res.fl == 4.0f * 3.5f);
+                CHECK(res.name == "td4");
             }
         }
     }

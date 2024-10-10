@@ -4,6 +4,7 @@
 #include "TSQueue2.hpp"
 
 #include <cstdio>
+#include <string>
 
 inline void producer(LCNS::ThreadSafe::Queue1<int>& queue, const int item_count)
 {
@@ -17,61 +18,40 @@ struct TestData
 {
     TestData() = delete;
 
-    TestData(int init_index)
-    : index(init_index)
-    , fl(new float)
+    TestData(std::string init_name)
+    : name(std::move(init_name))
     {
-        *fl = static_cast<float>(index) * 3.5f;
-        printf("Test Data: constructor with index parameter %d and fl: %f\n", index, *fl);
+        printf("Test Data: constructor with name %s\n", name.c_str());
     }
 
     TestData(const TestData& rhs)
-    : index(rhs.index)
+    : name(rhs.name)
     {
-        fl  = new float;
-        *fl = *rhs.fl;
-        printf("Test Data: copy constructor %d and fl: %f\n", index, *fl);
+        printf("Test Data: copy constructor with name  %s\n", name.c_str());
     }
 
     TestData(TestData&& rhs)
-    : index(rhs.index)
+    : name(std::move(rhs.name))
     {
-        std::swap(fl, rhs.fl);
-        printf("Test Data: move constructor %d and fl: %f\n", index, *fl);
+        printf("Test Data: move constructor  %s\n", name.c_str());
     }
 
     TestData& operator=(const TestData& rhs)
     {
-        index = rhs.index;
-        fl    = new float;
-        *fl   = *rhs.fl;
-        printf("Test Data: copy assignment operator%d and fl: %f\n", index, *fl);
+        name = rhs.name;
+        printf("Test Data: copy assignment operator  %s\n", name.c_str());
         return *this;
     }
 
     TestData& operator=(TestData&& rhs)
     {
-        index = rhs.index;
-        std::swap(fl, rhs.fl);
-        printf("Test Data: move assignment operator %d and fl: %f\n", index, *fl);
+        name = std::move(rhs.name);
+        printf("Test Data: move assignment operator  %s\n", name.c_str());
 
         return *this;
     }
 
-    ~TestData()
-    {
-        if (fl)
-        {
-            printf("Test Data: Destructor with index %d and fl: %f\n", index, *fl);
-        }
-        else
-        {
-            printf("Test Data: Destructor with index %d and fl: nulltpr\n", index);
-        }
+    ~TestData() { printf("Test Data: Destructor with name %s\n", name.c_str()); }
 
-        delete fl;
-    }
-
-    int    index = 99;
-    float* fl    = nullptr;
+    std::string name;
 };
