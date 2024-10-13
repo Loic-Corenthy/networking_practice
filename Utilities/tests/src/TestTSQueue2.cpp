@@ -2,7 +2,10 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <thread>
+
 using LCNS::ThreadSafe::Queue2;
+using std::jthread;
 
 TEST_CASE("Empty queue2", "[test][internal]")
 {
@@ -164,6 +167,65 @@ TEST_CASE("Clearing the queue", "[test][internal]")
                 CHECK(queue.size() == test_size);
                 CHECK(queue.is_empty());
             }
+        }
+    }
+}
+
+TEST_CASE("1 producer - 1 consumer", "[test][single_consumer]")
+{
+    Queue2<int> tsq2;
+    const int   item_count = 10;
+
+    GIVEN("1000 elements being added to the queue")
+    {
+        jthread tp1(producer2, std::ref(tsq2), item_count);
+
+        THEN("The same number of elements can be retrieved asynchronously from a different thread using \"try_pop\"")
+        {
+            auto consumer = [](Queue2<int>& queue, int& tested_items)
+            {
+                while (tested_items < item_count)
+                {
+                    int value = std::numeric_limits<int>::max();
+                    if (queue.try_pop(value))
+                    {
+                        CHECK((-item_count <= value && value <= item_count));
+                        tested_items++;
+                    }
+                }
+            };
+
+            int tested_items = 0u;
+
+            {
+                jthread tc(consumer, std::ref(tsq2), std::ref(tested_items));
+            }
+
+            CHECK(tsq2.is_empty());
+        }
+
+        THEN("The same number of elements can be retrieved asynchronously from a different thread")
+        {
+            auto consumer = [](Queue2<int>& queue, int& tested_items)
+            {
+                while (tested_items < item_count)
+                {
+                    int value = std::numeric_limits<int>::max();
+                    queue.wait_and_pop(value);
+
+                    CHECK((-item_count <= value && value <= item_count));
+
+                    tested_items++;
+                }
+            };
+
+            int tested_items = 0;
+
+            {
+                jthread tc(consumer, std::ref(tsq2), std::ref(tested_items));
+            }
+
+            CHECK(tsq2.is_empty());
         }
     }
 }

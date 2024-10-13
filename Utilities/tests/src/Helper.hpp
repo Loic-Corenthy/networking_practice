@@ -14,6 +14,14 @@ inline void producer(LCNS::ThreadSafe::Queue1<int>& queue, const int item_count)
     }
 }
 
+inline void producer2(LCNS::ThreadSafe::Queue2<int>& queue, const int item_count)
+{
+    for (int i = 0; i < item_count; ++i)
+    {
+        queue.push(i);
+    }
+}
+
 struct TestData
 {
     TestData() = delete;

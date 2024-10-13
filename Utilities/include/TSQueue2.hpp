@@ -29,22 +29,29 @@ namespace LCNS::ThreadSafe
         void clear();
 
     private:
-        template <typename U>
         struct Node
         {
-            std::unique_ptr<U>       data;
-            std::unique_ptr<Node<U>> next;
+            std::unique_ptr<T>    data;
+            std::unique_ptr<Node> next;
         };
-        std::unique_ptr<Node<T>> _head;
-        Node<T>*                 _tail = nullptr;
-        mutable std::mutex       _mutex;
-        std::condition_variable  _data_condition;
-        std::size_t              _size = 0ul;
+
+    private:
+        Node* get_tail() const;
+
+        std::unique_ptr<Node> pop_head();
+
+    private:
+        std::unique_ptr<Node>   _head;
+        Node*                   _tail = nullptr;
+        mutable std::mutex      _head_mutex;
+        mutable std::mutex      _tail_mutex;
+        std::condition_variable _data_condition;
+        std::size_t             _size = 0ul;
     };
 
     template <typename T>
     inline Queue2<T>::Queue2()
-    : _head(std::make_unique<Node<T>>())
+    : _head(std::make_unique<Node>())
     , _tail(_head.get())
     {
     }
@@ -53,12 +60,12 @@ namespace LCNS::ThreadSafe
     inline void Queue2<T>::push(T item)
     {
         auto new_data = std::make_unique<T>(std::forward<T>(item));
-        auto new_node = std::make_unique<Node<T>>();
+        auto new_node = std::make_unique<Node>();
 
-        _tail->data   = std::move(new_data);
+        Node* new_tail = new_node.get();
 
-        Node<T>* new_tail = new_node.get();
-
+        std::scoped_lock tail_lock(_tail_mutex);
+        _tail->data = std::move(new_data);
         _tail->next = std::move(new_node);
 
         _tail = new_tail;
@@ -69,15 +76,14 @@ namespace LCNS::ThreadSafe
     template <typename T>
     inline bool Queue2<T>::try_pop(T& value)
     {
-        if (_head.get() == _tail)
+        auto old_head = pop_head();
+
+        if (!old_head)
         {
             return false;
         }
 
-        value = *_head->data;
-
-        _head = std::move(_head->next);
-
+        value = *old_head->data;
         --_size;
         return true;
     }
@@ -90,18 +96,22 @@ namespace LCNS::ThreadSafe
     template <typename T>
     inline bool Queue2<T>::is_empty() const
     {
-        return _head.get() == _tail;
+        std::scoped_lock head_lock(_head_mutex);
+        return _head.get() == get_tail();
     }
 
     template <typename T>
     inline std::size_t Queue2<T>::size() const
     {
+        std::scoped_lock both_lock(_head_mutex, _tail_mutex);
         return _size;
     }
 
     template <typename T>
     inline void Queue2<T>::clear()
     {
+        std::scoped_lock both_lock(_head_mutex, _tail_mutex);
+
         if (_size == 0ul)
         {
             return;
@@ -109,9 +119,32 @@ namespace LCNS::ThreadSafe
 
         _head.reset();
 
-        _head = std::make_shared<Node<T>>();
+        _head = std::make_unique<Node>();
         _tail = _head.get();
         _size = 0ul;
+    }
+
+    template <typename T>
+    inline Queue2<T>::Node* Queue2<T>::get_tail() const
+    {
+        std::scoped_lock tail_lock(_tail_mutex);
+        return _tail;
+    }
+
+    template <typename T>
+    inline std::unique_ptr<typename Queue2<T>::Node> Queue2<T>::pop_head()
+    {
+        std::scoped_lock head_lock(_head_mutex);
+
+        if (_head.get() == get_tail())
+        {
+            return nullptr;
+        }
+
+        auto old_head = std::move(_head);
+        _head         = std::move(old_head->next);
+
+        return old_head;
     }
 
 }  // namespace LCNS::ThreadSafe
