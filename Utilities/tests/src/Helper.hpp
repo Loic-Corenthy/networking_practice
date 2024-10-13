@@ -18,7 +18,7 @@ struct TestData
 {
     TestData() = delete;
 
-    TestData(std::string init_name)
+    explicit TestData(std::string init_name)
     : name(std::move(init_name))
     {
         printf("Test Data: constructor with name %s\n", name.c_str());

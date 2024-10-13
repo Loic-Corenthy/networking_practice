@@ -50,9 +50,9 @@ namespace LCNS::ThreadSafe
     template <typename T>
     inline void Queue2<T>::push(T item)
     {
-        std::unique_ptr<Node<T>>  new_node(new Node<T>(std::forward<T>(item)));
-        std::scoped_lock lk(_mutex);
-        Node<T>*         new_tail = new_node.get();
+        std::unique_ptr<Node<T>> new_node(new Node<T>(std::forward<T>(item)));
+        std::scoped_lock         lk(_mutex);
+        Node<T>*                 new_tail = new_node.get();
 
         if (_tail)
         {
@@ -99,7 +99,7 @@ namespace LCNS::ThreadSafe
     inline bool Queue2<T>::is_empty() const
     {
         std::scoped_lock lk(_mutex);
-        return !_head;
+        return !_head && !_tail;
     }
 
     template <typename T>
@@ -113,6 +113,31 @@ namespace LCNS::ThreadSafe
     inline void Queue2<T>::clear()
     {
         std::scoped_lock lk(_mutex);
+
+        if (_size == 0ul)
+        {
+            return;
+        }
+
+        if (_size == 1ul)
+        {
+            _head.reset();
+            _tail = nullptr;
+            _size = 0ul;
+
+            return;
+        }
+
+        std::unique_ptr<Node<T>> current = std::move(_head);
+
+        do
+        {
+            auto next = std::move(current->next);
+            current.reset();
+            current = std::move(next);
+        } while (current);
+
+        _tail = nullptr;
 
         _size = 0ul;
     }
