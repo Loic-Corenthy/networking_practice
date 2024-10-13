@@ -119,26 +119,8 @@ namespace LCNS::ThreadSafe
             return;
         }
 
-        if (_size == 1ul)
-        {
-            _head.reset();
-            _tail = nullptr;
-            _size = 0ul;
-
-            return;
-        }
-
-        std::unique_ptr<Node<T>> current = std::move(_head);
-
-        do
-        {
-            auto next = std::move(current->next);
-            current.reset();
-            current = std::move(next);
-        } while (current);
-
+        _head.reset();
         _tail = nullptr;
-
         _size = 0ul;
     }
 
