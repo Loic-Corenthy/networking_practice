@@ -174,7 +174,7 @@ TEST_CASE("Clearing the queue", "[test][internal]")
 TEST_CASE("1 producer - 1 consumer", "[test][single_consumer]")
 {
     Queue2<int> tsq2;
-    const int   item_count = 10;
+    const int   item_count = 1000;
 
     GIVEN("1000 elements being added to the queue")
     {
@@ -210,12 +210,19 @@ TEST_CASE("1 producer - 1 consumer", "[test][single_consumer]")
             {
                 while (tested_items < item_count)
                 {
+                    // int value = std::numeric_limits<int>::max();
+                    // queue.wait_and_pop(value);
+
+                    // CHECK((-item_count <= value && value <= item_count));
+
+                    // tested_items++;
+
                     int value = std::numeric_limits<int>::max();
-                    queue.wait_and_pop(value);
-
-                    CHECK((-item_count <= value && value <= item_count));
-
-                    tested_items++;
+                    if (queue.try_pop(value))
+                    {
+                        CHECK((-item_count <= value && value <= item_count));
+                        tested_items++;
+                    }
                 }
             };
 

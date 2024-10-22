@@ -40,6 +40,12 @@ namespace LCNS::ThreadSafe
 
         std::unique_ptr<Node> pop_head();
 
+        std::unique_lock<std::mutex> wait_for_data() const;
+
+        std::unique_ptr<Node> wait_pop_head();
+
+        std::unique_ptr<Node> wait_pop_head(T& value);
+
     private:
         std::unique_ptr<Node>   _head;
         Node*                   _tail = nullptr;
@@ -62,15 +68,20 @@ namespace LCNS::ThreadSafe
         auto new_data = std::make_unique<T>(std::forward<T>(item));
         auto new_node = std::make_unique<Node>();
 
-        Node* new_tail = new_node.get();
+        {
+            std::scoped_lock tail_lock(_tail_mutex);
 
-        std::scoped_lock tail_lock(_tail_mutex);
-        _tail->data = std::move(new_data);
-        _tail->next = std::move(new_node);
+            Node* new_tail = new_node.get();
 
-        _tail = new_tail;
+            _tail->data = std::move(new_data);
+            _tail->next = std::move(new_node);
 
-        ++_size;
+            _tail = new_tail;
+
+            ++_size;
+        }
+
+        _data_condition.notify_one();
     }
 
     template <typename T>
@@ -145,6 +156,24 @@ namespace LCNS::ThreadSafe
         _head         = std::move(old_head->next);
 
         return old_head;
+    }
+
+    template <typename T>
+    inline std::unique_lock<std::mutex> Queue2<T>::wait_for_data() const
+    {
+        return std::unique_lock<std::mutex>();
+    }
+
+    template <typename T>
+    inline std::unique_ptr<typename Queue2<T>::Node> Queue2<T>::wait_pop_head()
+    {
+        return std::unique_ptr<Node>();
+    }
+
+    template <typename T>
+    inline std::unique_ptr<typename Queue2<T>::Node> Queue2<T>::wait_pop_head([[maybe_unused]] T& value)
+    {
+        return std::unique_ptr<Node>();
     }
 
 }  // namespace LCNS::ThreadSafe
