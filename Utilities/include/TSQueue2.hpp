@@ -40,7 +40,7 @@ namespace LCNS::ThreadSafe
 
         std::unique_ptr<Node> pop_head();
 
-        std::unique_lock<std::mutex> wait_for_data() const;
+        std::unique_lock<std::mutex> wait_for_data();
 
         std::unique_ptr<Node> wait_pop_head();
 
@@ -157,7 +157,7 @@ namespace LCNS::ThreadSafe
     }
 
     template <typename T>
-    inline std::unique_lock<std::mutex> Queue2<T>::wait_for_data() const
+    inline std::unique_lock<std::mutex> Queue2<T>::wait_for_data()
     {
         std::unique_lock head_lock(_head_mutex);
 
