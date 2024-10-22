@@ -46,6 +46,10 @@ namespace LCNS::ThreadSafe
 
         std::unique_ptr<Node> wait_pop_head(T& value);
 
+        std::unique_ptr<Node> try_pop_head();
+
+        std::unique_ptr<Node> try_pop_head(T& value);
+
     private:
         std::unique_ptr<Node>   _head;
         Node*                   _tail = nullptr;
@@ -87,21 +91,21 @@ namespace LCNS::ThreadSafe
     template <typename T>
     inline bool Queue2<T>::try_pop(T& value)
     {
-        auto old_head = pop_head();
+        const auto old_head = try_pop_head(value);
 
         if (!old_head)
         {
             return false;
         }
 
-        value = *old_head->data;
         --_size;
         return true;
     }
 
     template <typename T>
-    inline void Queue2<T>::wait_and_pop([[maybe_unused]] T& value)
+    inline void Queue2<T>::wait_and_pop(T& value)
     {
+        wait_pop_head(value);
     }
 
     template <typename T>
@@ -145,15 +149,9 @@ namespace LCNS::ThreadSafe
     template <typename T>
     inline std::unique_ptr<typename Queue2<T>::Node> Queue2<T>::pop_head()
     {
-        std::scoped_lock head_lock(_head_mutex);
+        std::unique_ptr<Node> old_head = std::move(_head);
 
-        if (_head.get() == get_tail())
-        {
-            return nullptr;
-        }
-
-        auto old_head = std::move(_head);
-        _head         = std::move(old_head->next);
+        _head = std::move(old_head->next);
 
         return old_head;
     }
@@ -161,19 +159,54 @@ namespace LCNS::ThreadSafe
     template <typename T>
     inline std::unique_lock<std::mutex> Queue2<T>::wait_for_data() const
     {
-        return std::unique_lock<std::mutex>();
+        std::unique_lock head_lock(_head_mutex);
+
+        _data_condition.wait(head_lock, [this]() { return _head.get() != get_tail(); });
+
+        return head_lock;
     }
 
     template <typename T>
     inline std::unique_ptr<typename Queue2<T>::Node> Queue2<T>::wait_pop_head()
     {
-        return std::unique_ptr<Node>();
+        std::unique_lock head_lock(wait_for_data());
+        return pop_head();
     }
 
     template <typename T>
-    inline std::unique_ptr<typename Queue2<T>::Node> Queue2<T>::wait_pop_head([[maybe_unused]] T& value)
+    inline std::unique_ptr<typename Queue2<T>::Node> Queue2<T>::wait_pop_head(T& value)
     {
-        return std::unique_ptr<Node>();
+        std::unique_lock head_lock(wait_for_data());
+        value = std::forward<T>(*_head->data);
+        return pop_head();
+    }
+
+    template <typename T>
+    inline std::unique_ptr<typename Queue2<T>::Node> Queue2<T>::try_pop_head()
+    {
+        std::scoped_lock head_lock(_head_mutex);
+
+        if (_head.get() == get_tail())
+        {
+            return nullptr;
+        }
+
+        return pop_head();
+    }
+
+    template <typename T>
+    inline std::unique_ptr<typename Queue2<T>::Node> Queue2<T>::try_pop_head(T& value)
+    {
+        std::scoped_lock head_lock(_head_mutex);
+
+        if (_head.get() == get_tail())
+        {
+            return nullptr;
+        }
+
+        value = std::forward<T>(*_head->data);
+
+        return pop_head();
     }
 
 }  // namespace LCNS::ThreadSafe
