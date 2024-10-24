@@ -14,7 +14,7 @@ namespace LCNS::ThreadSafe
         Queue2(Queue2&&)                 = delete;
         Queue2& operator=(const Queue2&) = delete;
         Queue2& operator=(Queue2&&)      = delete;
-        ~Queue2() { _head.reset(); }
+        ~Queue2() = default;
 
         void push(T item);
 
@@ -27,6 +27,8 @@ namespace LCNS::ThreadSafe
         std::size_t size() const;
 
         void clear();
+
+        void stop_waiting();
 
     private:
         struct Node
@@ -57,6 +59,7 @@ namespace LCNS::ThreadSafe
         mutable std::mutex      _tail_mutex;
         std::condition_variable _data_condition;
         std::size_t             _size = 0ul;
+        std::atomic<bool>       _force_stop_waiting  = false;
     };
 
     template <typename T>
@@ -140,6 +143,13 @@ namespace LCNS::ThreadSafe
     }
 
     template <typename T>
+    inline void Queue2<T>::stop_waiting()
+    {
+        _force_stop_waiting.store(true);
+        _data_condition.notify_all();
+    }
+
+    template <typename T>
     inline Queue2<T>::Node* Queue2<T>::get_tail() const
     {
         std::scoped_lock tail_lock(_tail_mutex);
@@ -161,7 +171,7 @@ namespace LCNS::ThreadSafe
     {
         std::unique_lock head_lock(_head_mutex);
 
-        _data_condition.wait(head_lock, [this]() { return _head.get() != get_tail(); });
+        _data_condition.wait(head_lock, [this]() { return _force_stop_waiting.load() || _head.get() != get_tail(); });
 
         return head_lock;
     }
@@ -170,6 +180,12 @@ namespace LCNS::ThreadSafe
     inline std::unique_ptr<typename Queue2<T>::Node> Queue2<T>::wait_pop_head()
     {
         std::unique_lock head_lock(wait_for_data());
+
+        if (_force_stop_waiting.load())
+        {
+            return nullptr;
+        }
+
         return pop_head();
     }
 
@@ -177,6 +193,12 @@ namespace LCNS::ThreadSafe
     inline std::unique_ptr<typename Queue2<T>::Node> Queue2<T>::wait_pop_head(T& value)
     {
         std::unique_lock head_lock(wait_for_data());
+
+        if (_force_stop_waiting.load())
+        {
+            return nullptr;
+        }
+
         value = std::forward<T>(*_head->data);
         return pop_head();
     }

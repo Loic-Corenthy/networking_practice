@@ -344,13 +344,38 @@ TEST_CASE("1 consumer - 5 producers", "[test][single_consumer]")
     }
 }
 
+TEST_CASE("Stop a waiting queue", "[test][single_consumer]")
+{
+    Queue2<int> tsq2;
+
+    tsq2.push(404);
+
+    auto consumer = [](Queue2<int>& queue)
+    {
+        static constexpr int invalid = std::numeric_limits<int>::max();
+        int                  value   = invalid;
+        queue.wait_and_pop(value);
+        printf("Exiting consumer thread\n");
+    };
+
+    const int input_thread_count = 5;
+    jthread   consumers[input_thread_count];
+
+    for (int i = 0; i < input_thread_count; ++i)
+    {
+        consumers[i] = jthread(consumer, std::ref(tsq2));
+    }
+
+    CHECK_NOTHROW(tsq2.stop_waiting());
+}
+
 TEST_CASE("5 consumers - 5 producers", "[test][multi_consumers]")
 {
     Queue2<int> tsq2;
     const int   item_count         = 1000;
     const int   input_thread_count = 5;
 
-    GIVEN("A 5 threads ready to consume data from the queue")
+    GIVEN("5 threads ready to consume data from the queue")
     {
         auto consumer = [](Queue2<int>& queue, std::atomic<int>& all_tested_items, int& processed_item_per_thread)
         {
@@ -358,17 +383,14 @@ TEST_CASE("5 consumers - 5 producers", "[test][multi_consumers]")
 
             while (all_tested_items < value_count)
             {
-                int value = std::numeric_limits<int>::max();
-                // if (queue.try_pop(value))
-                // {
-                //     CHECK((-value_count <= value && value <= value_count));
-                //     all_tested_items++;
-                //     processed_item_per_thread++;
-                // }
+                static constexpr int invalid = std::numeric_limits<int>::max();
+                int                  value   = invalid;
 
                 queue.wait_and_pop(value);
-
-                CHECK((-value_count <= value && value <= value_count));
+                if (value != invalid)
+                {
+                    CHECK((-value_count <= value && value <= value_count));
+                }
 
                 all_tested_items++;
                 processed_item_per_thread++;
@@ -393,13 +415,18 @@ TEST_CASE("5 consumers - 5 producers", "[test][multi_consumers]")
                 producers[i] = jthread(producer2, std::ref(tsq2), item_count);
             }
 
+            while (all_tested_items < item_count * input_thread_count)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            }
+
+            tsq2.stop_waiting();
+
+
             THEN("All the elements are eventually used by the consumer")
             {
                 for (int i = 0; i < input_thread_count; ++i)
                 {
-                    if (consumers[i].joinable())
-                        consumers[i].join();
-
                     printf("Consumer %d processed %d items\n", i, processed_item_per_thread[i]);
                 }
 
