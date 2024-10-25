@@ -344,29 +344,40 @@ TEST_CASE("1 consumer - 5 producers", "[test][single_consumer]")
     }
 }
 
-TEST_CASE("Stop a waiting queue", "[test][single_consumer]")
+TEST_CASE("Force stop waiting in a queue", "[test][multi_consumer]")
 {
-    Queue2<int> tsq2;
-
-    tsq2.push(404);
-
-    auto consumer = [](Queue2<int>& queue)
+    GIVEN("A queue with less data than consumer threads")
     {
-        static constexpr int invalid = std::numeric_limits<int>::max();
-        int                  value   = invalid;
-        queue.wait_and_pop(value);
-        printf("Exiting consumer thread\n");
-    };
+        Queue2<int> tsq2;
+        tsq2.push(404);
 
-    const int input_thread_count = 5;
-    jthread   consumers[input_thread_count];
+        const int input_thread_count = 5;
+        REQUIRE(tsq2.size() < input_thread_count);
 
-    for (int i = 0; i < input_thread_count; ++i)
-    {
-        consumers[i] = jthread(consumer, std::ref(tsq2));
+        atomic<int> completed_threads = {};
+
+        WHEN("All the consumer threads start to wait for data to process")
+        {
+            auto consumer = [](Queue2<int>& queue, atomic<int>& completed_threads)
+            {
+                static constexpr int invalid = std::numeric_limits<int>::max();
+                int                  value   = invalid;
+                queue.wait_and_pop(value);
+                completed_threads++;
+            };
+
+            jthread consumers[input_thread_count];
+
+            for (int i = 0; i < input_thread_count; ++i)
+            {
+                consumers[i] = jthread(consumer, std::ref(tsq2), std::ref(completed_threads));
+            }
+
+            THEN("It's possible to make all the waiting threads to stop even when there is no data.") { tsq2.stop_waiting(); }
+        }
+
+        CHECK(completed_threads == input_thread_count);
     }
-
-    CHECK_NOTHROW(tsq2.stop_waiting());
 }
 
 TEST_CASE("5 consumers - 5 producers", "[test][multi_consumers]")
