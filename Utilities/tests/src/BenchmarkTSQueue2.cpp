@@ -5,9 +5,8 @@
 #include <catch2/benchmark/catch_benchmark.hpp>
 
 #include <thread>
-#include <stdio.h>
 
-using LCNS::ThreadSafe::Queue1;
+using LCNS::ThreadSafe::Queue2;
 
 using std::atomic;
 using std::jthread;
@@ -16,9 +15,9 @@ TEST_CASE_METHOD(BenchmarkFixture, "1 consumer - 5 producers", "[benchmark][sing
 {
     BENCHMARK("1 consumers - 5 producers")
     {
-        Queue1<int> tsq1;
+        Queue2<int> tsq2;
 
-        auto consumer = [](Queue1<int>& queue)
+        auto consumer = [](Queue2<int>& queue)
         {
             int tested_items = 0;
 
@@ -33,17 +32,17 @@ TEST_CASE_METHOD(BenchmarkFixture, "1 consumer - 5 producers", "[benchmark][sing
             }
         };
 
-        jthread consumer_thread(consumer, std::ref(tsq1));
+        jthread consumer_thread(consumer, std::ref(tsq2));
 
         jthread producers[input_thread_count];
 
         for (int i = 0; i < input_thread_count; ++i)
         {
-            producers[i] = jthread(producer, std::ref(tsq1), item_per_thread_count);
+            producers[i] = jthread(producer2, std::ref(tsq2), item_per_thread_count);
         }
 
         consumer_thread.join();
-        CHECK(tsq1.is_empty());
+        CHECK(tsq2.is_empty());
         return 0;
     };
 }
@@ -52,10 +51,10 @@ TEST_CASE_METHOD(BenchmarkFixture, "5 consumers - 5 producers", "[benchmark][mul
 {
     BENCHMARK("5 consumers - 5 producers")
     {
-        Queue1<int> tsq1;
+        Queue2<int> tsq2;
         atomic<int> all_tested_items = 0;
 
-        auto consumer = [](Queue1<int>& queue, std::atomic<int>& all_tested_items)
+        auto consumer = [](Queue2<int>& queue, std::atomic<int>& all_tested_items)
         {
             // Probably not the best condition but it works for now
             while (all_tested_items < total_item_count)
@@ -74,18 +73,18 @@ TEST_CASE_METHOD(BenchmarkFixture, "5 consumers - 5 producers", "[benchmark][mul
 
             for (int i = 0; i < input_thread_count; ++i)
             {
-                consumers[i] = jthread(consumer, std::ref(tsq1), std::ref(all_tested_items));
+                consumers[i] = jthread(consumer, std::ref(tsq2), std::ref(all_tested_items));
             }
 
             jthread producers[input_thread_count];
 
             for (int i = 0; i < input_thread_count; ++i)
             {
-                producers[i] = jthread(producer, std::ref(tsq1), item_per_thread_count);
+                producers[i] = jthread(producer2, std::ref(tsq2), item_per_thread_count);
             }
         }
 
-        CHECK(tsq1.is_empty());
+        CHECK(tsq2.is_empty());
 
         return 0;
     };
