@@ -20,7 +20,7 @@ TEST_CASE_METHOD(BenchmarkFixture, "1 consumer - 5 producers", "[benchmark][sing
 
         auto consumer = [](Queue1<int>& queue)
         {
-            int        tested_items = 0;
+            int tested_items = 0;
 
             while (tested_items < total_item_count)
             {

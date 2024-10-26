@@ -42,7 +42,10 @@ TEST_CASE("Adding elements", "[test][internal]")
             TestData td1("td1");
             queue.push(std::move(td1));
 
-            THEN("The size increases by 1") { CHECK(queue.size() == 1ul); }
+            THEN("The size increases by 1")
+            {
+                CHECK(queue.size() == 1ul);
+            }
 
             THEN("We can get back the last item using pop")
             {
@@ -373,7 +376,10 @@ TEST_CASE("Force stop waiting in a queue", "[test][multi_consumer]")
                 consumers[i] = jthread(consumer, std::ref(tsq2), std::ref(completed_threads));
             }
 
-            THEN("It's possible to make all the waiting threads to stop even when there is no data.") { tsq2.stop_waiting(); }
+            THEN("It's possible to make all the waiting threads to stop even when there is no data.")
+            {
+                tsq2.stop_waiting();
+            }
         }
 
         CHECK(completed_threads == input_thread_count);

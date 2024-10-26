@@ -29,37 +29,40 @@ struct TestData
     explicit TestData(std::string init_name)
     : name(std::move(init_name))
     {
-        printf("Test Data: constructor with name %s\n", name.c_str());
+        std::printf("Test Data: constructor with name %s\n", name.c_str());
     }
 
     TestData(const TestData& rhs)
     : name(rhs.name)
     {
-        printf("Test Data: copy constructor with name  %s\n", name.c_str());
+        std::printf("Test Data: copy constructor with name  %s\n", name.c_str());
     }
 
     TestData(TestData&& rhs)
     : name(std::move(rhs.name))
     {
-        printf("Test Data: move constructor  %s\n", name.c_str());
+        std::printf("Test Data: move constructor  %s\n", name.c_str());
     }
 
     TestData& operator=(const TestData& rhs)
     {
         name = rhs.name;
-        printf("Test Data: copy assignment operator  %s\n", name.c_str());
+        std::printf("Test Data: copy assignment operator  %s\n", name.c_str());
         return *this;
     }
 
     TestData& operator=(TestData&& rhs)
     {
         name = std::move(rhs.name);
-        printf("Test Data: move assignment operator  %s\n", name.c_str());
+        std::printf("Test Data: move assignment operator  %s\n", name.c_str());
 
         return *this;
     }
 
-    ~TestData() { printf("Test Data: Destructor with name %s\n", name.c_str()); }
+    ~TestData()
+    {
+        std::printf("Test Data: Destructor with name %s\n", name.c_str());
+    }
 
     std::string name;
 };
