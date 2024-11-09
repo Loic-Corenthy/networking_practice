@@ -8,8 +8,8 @@ target_sources(testTSQueue1
         src/BenchmarkTSQueue1.cpp
 )
 
-add_test(NAME "Test queue1" COMMAND "$<TARGET_FILE:testTSQueue1>" "[test]")
-add_test(NAME "Benchmark queue1" COMMAND "$<TARGET_FILE:testTSQueue1>" "[benchmark]")
+add_test(NAME "Test queue 1" COMMAND "$<TARGET_FILE:testTSQueue1>" "[test]")
+add_test(NAME "Benchmark queue 1" COMMAND "$<TARGET_FILE:testTSQueue1>" "[benchmark]")
 
 add_executable(testTSQueue2)
 
@@ -21,13 +21,24 @@ target_sources(testTSQueue2
         src/BenchmarkTSQueue2.cpp
 )
 
-add_test(NAME "Test queue2" COMMAND "$<TARGET_FILE:testTSQueue2>" "[test]")
-add_test(NAME "Benchmark queue2" COMMAND "$<TARGET_FILE:testTSQueue2>" "[benchmark]")
+add_test(NAME "Test queue 2" COMMAND "$<TARGET_FILE:testTSQueue2>" "[test]")
+add_test(NAME "Benchmark queue 2" COMMAND "$<TARGET_FILE:testTSQueue2>" "[benchmark]")
+
+
+add_executable(testTSLookupTable1)
+
+target_sources(testTSLookupTable1
+    PRIVATE
+        src/Helper.hpp
+        src/TestTSLookupTable1.cpp
+)
+
+add_test(NAME "Test lookup table 1" COMMAND "$<TARGET_FILE:testTSLookupTable1>" "[test]")
 
 ####################################
 # Setup common to all test targets #
 ####################################
-set(ALL_TEST_TARGETS testTSQueue1 testTSQueue2)
+set(ALL_TEST_TARGETS testTSQueue1 testTSQueue2 testTSLookupTable1)
 
 foreach(TEST_TARGET IN LISTS ALL_TEST_TARGETS)
     target_link_libraries(${TEST_TARGET} PRIVATE Utilities Catch2::Catch2WithMain)

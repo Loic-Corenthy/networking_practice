@@ -2,6 +2,7 @@ add_library(Utilities INTERFACE)
 
 target_sources(Utilities
   INTERFACE
+    include/TSLookupTable1.hpp
     include/TSQueue1.hpp
     include/TSQueue2.hpp
 )
