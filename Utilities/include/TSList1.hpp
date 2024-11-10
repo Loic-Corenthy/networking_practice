@@ -29,7 +29,8 @@ namespace LCNS::ThreadSafe
         template <InvocableWithBoth<Value> Function>
         void for_each(Function func);
 
-        // template<std::predicate<Value>
+        template <std::predicate<Value> Predicate>
+        std::shared_ptr<Value> find_first_if(Predicate predicate);
 
         template <std::predicate<Value> Predicate>
         void remove_if(Predicate pred);
@@ -66,7 +67,7 @@ namespace LCNS::ThreadSafe
 
         std::scoped_lock lock(_head.mutex);
         new_node->next = std::move(_head.next);
-        _head.next    = std::move(new_node);
+        _head.next     = std::move(new_node);
     }
 
     template <typename Value>
@@ -85,6 +86,31 @@ namespace LCNS::ThreadSafe
             current = next_node;
             lock    = std::move(next_lock);
         }
+    }
+
+    template <typename Value>
+    template <std::predicate<Value> Predicate>
+    inline std::shared_ptr<Value> List1<Value>::find_first_if(Predicate predicate)
+    {
+        Node* current = &_head;
+
+        std::unique_lock lock(_head.mutex);
+
+        while (Node* next_node = current->next.get())
+        {
+            std::unique_lock next_lock(next_node->mutex);
+            lock.unlock();
+
+            if (predicate(*next_node->data))
+            {
+                return next_node->data;
+            }
+
+            current = next_node;
+            lock    = std::move(next_lock);
+        }
+
+        return nullptr;
     }
 
     template <typename Value>
