@@ -12,7 +12,7 @@ using LCNS::ThreadSafe::Queue1;
 using std::atomic;
 using std::jthread;
 
-TEST_CASE_METHOD(BenchmarkFixture, "1 consumer - 5 producers", "[benchmark][single_consumer]")
+TEST_CASE_METHOD(BenchmarkQueueFixture, "1 consumer - 5 producers", "[benchmark][single_consumer]")
 {
     BENCHMARK("1 consumers - 5 producers")
     {
@@ -48,7 +48,7 @@ TEST_CASE_METHOD(BenchmarkFixture, "1 consumer - 5 producers", "[benchmark][sing
     };
 }
 
-TEST_CASE_METHOD(BenchmarkFixture, "5 consumers - 5 producers", "[benchmark][multi_consumers]")
+TEST_CASE_METHOD(BenchmarkQueueFixture, "5 consumers - 5 producers", "[benchmark][multi_consumers]")
 {
     BENCHMARK("5 consumers - 5 producers")
     {

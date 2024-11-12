@@ -2,10 +2,10 @@
 
 #include <cstdio>
 
-class BenchmarkFixture
+class BenchmarkQueueFixture
 {
 public:
-    BenchmarkFixture() { std::printf("CTEST_FULL_OUTPUT\n"); }
+    BenchmarkQueueFixture() { std::printf("CTEST_FULL_OUTPUT\n"); }
 
 protected:
     static constexpr int item_per_thread_count = 1024;
