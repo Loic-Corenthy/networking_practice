@@ -7,9 +7,13 @@
 
 #include <thread>
 #include <iostream>
+#include <functional>
+
+using LCNS::ThreadSafe::List1;
 
 using Catch::Generators::random;
-using LCNS::ThreadSafe::List1;
+
+using std::jthread;
 
 class TestList1Fixture
 {
@@ -33,6 +37,28 @@ public:
     {
         return i == 3;
     };
+
+    static void find_range(List1<int>& list, int begin_value, int target_count)
+    {
+        int found_count = 0;
+        int target = begin_value;
+
+        auto in_range = [&target](const int i) -> bool
+        {
+            return i == target;
+        };
+
+        while (found_count < target_count)
+        {
+            if (list.find_first_if(in_range))
+            {
+                target++;
+                found_count++;
+            }
+        }
+
+        CHECK(found_count == target_count);
+    }
 };
 
 TEST_CASE_METHOD(TestList1Fixture, "Empty list", "[test][internal]")
@@ -185,6 +211,28 @@ TEST_CASE_METHOD(TestList1Fixture, "Removing elements", "[test][internal]")
                 CHECK(two == nullptr);
                 CHECK(*three == 3);
             }
+        }
+    }
+}
+
+TEST_CASE_METHOD(TestList1Fixture, "Checking elements", "[test][multi-consumers]")
+{
+    GIVEN("A list prefiled with 100 elements")
+    {
+        List1<int> list;
+
+        for (int i = 0; i < 100; ++i)
+        {
+            list.push_front(i);
+        }
+
+        THEN("They can be retrieved from multiple threads")
+        {
+            jthread t3 = jthread(TestList1Fixture::find_range, std::ref(list), 60, 20);
+            jthread t0 = jthread(TestList1Fixture::find_range, std::ref(list), 0, 20);
+            jthread t1 = jthread(TestList1Fixture::find_range, std::ref(list), 20, 20);
+            jthread t4 = jthread(TestList1Fixture::find_range, std::ref(list), 80, 20);
+            jthread t2 = jthread(TestList1Fixture::find_range, std::ref(list), 40, 20);
         }
     }
 }

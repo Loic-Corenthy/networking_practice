@@ -41,10 +41,14 @@ add_executable(testTSList1)
 target_sources(testTSList1
     PRIVATE
         src/Helper.hpp
+        src/BenchmarkFixture.hpp
         src/TestTSList1.cpp
+        src/BenchmarkTSList1.cpp
+
 )
 
 add_test(NAME "Test list 1" COMMAND "$<TARGET_FILE:testTSList1>" "[test]")
+add_test(NAME "Benchmark list 1" COMMAND "$<TARGET_FILE:testTSList1>" "[benchmark]")
 
 
 ####################################
