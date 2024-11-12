@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <memory>
 
 namespace LCNS::ThreadSafe
 {
@@ -9,17 +10,17 @@ namespace LCNS::ThreadSafe
     {
     public:
         void push(const Data& data);
-        void pop(Data& data);
+        std::shared_ptr<Data> pop();
 
     private:
         struct Node
         {
             Node(const Data& input_data)
-            : data(input_data)
+            : data(std::make_shared<Data>(input_data))
             {
             }
 
-            Data  data;
+            std::shared_ptr<Data>  data;
             Node* next;
         };
 
@@ -35,11 +36,12 @@ namespace LCNS::ThreadSafe
     }
 
     template <typename Data>
-    inline void LockFreeStack<Data>::pop(Data& data)
+    inline std::shared_ptr<Data> LockFreeStack<Data>::pop()
     {
         Node* old_head = _head.load();
-        while(!_head.compare_exchange_weak(old_head, old_head->next));
-        data = old_head->data;
+        while(old_head && !_head.compare_exchange_weak(old_head, old_head->next));
+
+        return old_head ? old_head->data : nullptr;
     }
 
 }  // namespace LCNS::ThreadSafe

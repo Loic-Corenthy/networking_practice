@@ -5,6 +5,7 @@ target_sources(Utilities
     include/TSLookupTable1.hpp
     include/TSQueue1.hpp
     include/TSQueue2.hpp
+    include/TSLockFreeStack.hpp
 )
 
 target_include_directories(Utilities

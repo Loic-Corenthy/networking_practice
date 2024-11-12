@@ -35,10 +35,21 @@ target_sources(testTSLookupTable1
 
 add_test(NAME "Test lookup table 1" COMMAND "$<TARGET_FILE:testTSLookupTable1>" "[test]")
 
+
+add_executable(testTSLockFreeStack)
+
+target_sources(testTSLockFreeStack
+    PRIVATE
+        src/Helper.hpp
+        src/TestTSLockFreeStack.cpp
+)
+
+add_test(NAME "Test lock free stack" COMMAND "$<TARGET_FILE:testTSLockFreeStack>" "[test]")
+
 ####################################
 # Setup common to all test targets #
 ####################################
-set(ALL_TEST_TARGETS testTSQueue1 testTSQueue2 testTSLookupTable1)
+set(ALL_TEST_TARGETS testTSQueue1 testTSQueue2 testTSLookupTable1 testTSLockFreeStack)
 
 foreach(TEST_TARGET IN LISTS ALL_TEST_TARGETS)
     target_link_libraries(${TEST_TARGET} PRIVATE Utilities Catch2::Catch2WithMain)
