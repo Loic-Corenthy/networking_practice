@@ -14,11 +14,11 @@ using LCNS::ThreadSafe::LockFreeStack;
 
 using std::array;
 using std::async;
+using std::atomic;
 using std::future;
 using std::make_tuple;
 using std::to_string;
 using std::tuple;
-using std::atomic;
 
 TEST_CASE("Basic", "[test][internal]")
 {
@@ -72,7 +72,7 @@ TEST_CASE("Basic", "[test][internal]")
 
 TEST_CASE("Multi threaded", "[test][internal]")
 {
-    const int total_element_count = 10;
+    const int total_element_count = 10000;
 
     GIVEN("A stack with a thread adding elements to it")
     {
@@ -95,9 +95,9 @@ TEST_CASE("Multi threaded", "[test][internal]")
         {
             auto get_elements = [](LockFreeStack<int>& stack, atomic<bool>& all_inserted) -> tuple<int, int>
             {
-                int count = 0;
-                int sum   = 0;
-                auto res = stack.pop();
+                int  count = 0;
+                int  sum   = 0;
+                auto res   = stack.pop();
                 while (res || !all_inserted.load())
                 {
                     if (res)
@@ -119,7 +119,8 @@ TEST_CASE("Multi threaded", "[test][internal]")
             future<tuple<int, int>> processed2 = async(get_elements, std::ref(stack), std::ref(are_all_inserted));
 
 
-            THEN("The input is the same as the output (i.e. same count and same total)") {
+            THEN("The input is the same as the output (i.e. same count and same total)")
+            {
                 are_all_inserted.store(inserted_done.get());
 
                 const auto [count0, sum0] = processed0.get();
@@ -128,7 +129,6 @@ TEST_CASE("Multi threaded", "[test][internal]")
 
                 CHECK(count0 + count1 + count2 == total_element_count);
                 CHECK(sum0 + sum1 + sum2 == total_element_count * (total_element_count + 1) / 2);
-
             }
         }
     }

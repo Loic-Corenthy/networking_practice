@@ -24,14 +24,13 @@ namespace LCNS::ThreadSafe
             Node*                 next;
         };
 
-    private:
         void try_reclaim(Node* old_head);
         void chain_pending_nodes(Node* nodes);
         void chain_pending_nodes(Node* first, Node* last);
         void chain_pending_node(Node* node);
-
         void delete_nodes(Node* nodes);
 
+    private:
         std::atomic<Node*>        _head = nullptr;
         std::atomic<unsigned int> _threads_in_pop;
         std::atomic<Node*>        _to_be_deleted;
@@ -42,8 +41,7 @@ namespace LCNS::ThreadSafe
     {
         Node* new_node = new Node(data);
         new_node->next = _head.load();
-        while (!_head.compare_exchange_weak(new_node->next, new_node))
-            ;
+        while (!_head.compare_exchange_weak(new_node->next, new_node)) {}
     }
 
     template <typename Data>
@@ -52,15 +50,19 @@ namespace LCNS::ThreadSafe
         ++_threads_in_pop;
 
         Node* old_head = _head.load();
-        while (old_head && !_head.compare_exchange_weak(old_head, old_head->next)){}
+        while (old_head && !_head.compare_exchange_weak(old_head, old_head->next)) {}
 
         std::shared_ptr<Data> result;
 
         if (old_head)
         {
             result.swap(old_head->data);
+            try_reclaim(old_head);
         }
-        try_reclaim(old_head);
+        else
+        {
+            --_threads_in_pop;
+        }
 
         return result;
     }
