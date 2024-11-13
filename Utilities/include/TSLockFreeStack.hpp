@@ -9,7 +9,7 @@ namespace LCNS::ThreadSafe
     class LockFreeStack
     {
     public:
-        void push(const Data& data);
+        void                  push(const Data& data);
         std::shared_ptr<Data> pop();
 
     private:
@@ -20,11 +20,21 @@ namespace LCNS::ThreadSafe
             {
             }
 
-            std::shared_ptr<Data>  data;
-            Node* next;
+            std::shared_ptr<Data> data;
+            Node*                 next;
         };
 
-        std::atomic<Node*> _head;
+    private:
+        void try_reclaim(Node* old_head);
+        void chain_pending_nodes(Node* nodes);
+        void chain_pending_nodes(Node* first, Node* last);
+        void chain_pending_node(Node* node);
+
+        void delete_nodes(Node* nodes);
+
+        std::atomic<Node*>        _head = nullptr;
+        std::atomic<unsigned int> _threads_in_pop;
+        std::atomic<Node*>        _to_be_deleted;
     };
 
     template <typename Data>
@@ -32,16 +42,89 @@ namespace LCNS::ThreadSafe
     {
         Node* new_node = new Node(data);
         new_node->next = _head.load();
-        while (!_head.compare_exchange_weak(new_node->next, new_node));
+        while (!_head.compare_exchange_weak(new_node->next, new_node))
+            ;
     }
 
     template <typename Data>
     inline std::shared_ptr<Data> LockFreeStack<Data>::pop()
     {
-        Node* old_head = _head.load();
-        while(old_head && !_head.compare_exchange_weak(old_head, old_head->next));
+        ++_threads_in_pop;
 
-        return old_head ? old_head->data : nullptr;
+        Node* old_head = _head.load();
+        while (old_head && !_head.compare_exchange_weak(old_head, old_head->next)){}
+
+        std::shared_ptr<Data> result;
+
+        if (old_head)
+        {
+            result.swap(old_head->data);
+        }
+        try_reclaim(old_head);
+
+        return result;
+    }
+
+    template <typename Data>
+    inline void LockFreeStack<Data>::try_reclaim(Node* old_head)
+    {
+        if (_threads_in_pop.load() == 1)
+        {
+            Node* nodes_to_delete = _to_be_deleted.exchange(nullptr);
+
+            if (!--_threads_in_pop)
+            {
+                delete_nodes(nodes_to_delete);
+            }
+            else if (nodes_to_delete)
+            {
+                chain_pending_nodes(nodes_to_delete);
+            }
+
+            delete old_head;
+        }
+        else
+        {
+            chain_pending_node(old_head);
+            --_threads_in_pop;
+        }
+    }
+
+    template <typename Data>
+    inline void LockFreeStack<Data>::chain_pending_nodes(Node* nodes)
+    {
+        Node* last = nodes;
+
+        while (Node* const next = last->next)
+        {
+            last = next;
+        }
+
+        chain_pending_nodes(nodes, last);
+    }
+
+    template <typename Data>
+    inline void LockFreeStack<Data>::chain_pending_nodes(Node* first, Node* last)
+    {
+        last->next = _to_be_deleted;
+        while (!_to_be_deleted.compare_exchange_weak(last->next, first)) {}
+    }
+
+    template <typename Data>
+    inline void LockFreeStack<Data>::chain_pending_node(Node* node)
+    {
+        chain_pending_nodes(node, node);
+    }
+
+    template <typename Data>
+    inline void LockFreeStack<Data>::delete_nodes(Node* nodes)
+    {
+        while (nodes)
+        {
+            Node* next = nodes->next;
+            delete nodes;
+            nodes = next;
+        }
     }
 
 }  // namespace LCNS::ThreadSafe
