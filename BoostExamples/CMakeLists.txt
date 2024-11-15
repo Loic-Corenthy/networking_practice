@@ -1,4 +1,4 @@
-foreach(TARGET_NAME boost_example1 boost_example2)
+foreach(TARGET_NAME boost_example1 boost_example2 boost_example3)
   add_executable(${TARGET_NAME})
 
   string(SUBSTRING ${TARGET_NAME} 6 8 FILE_NAME)
