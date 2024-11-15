@@ -36,8 +36,14 @@ string(TOLOWER ${CMAKE_BUILD_TYPE} LOCAL_BUILD_TYPE_LOWER)
 # Make CTest available for targets
 include(CTest)
 
+# Helpers for cmake
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
+include(DefaultConfiguration)
+
+add_subdirectory(BoostExamples)
 add_subdirectory(Example1)
 add_subdirectory(NetCommon)
 add_subdirectory(NetClient)
 add_subdirectory(NetServer)
 add_subdirectory(Utilities)
+
