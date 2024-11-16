@@ -40,7 +40,7 @@ include(CTest)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
 include(DefaultConfiguration)
 
-add_subdirectory(BoostExamples)
+add_subdirectory(BoostTutorials)
 add_subdirectory(Example1)
 add_subdirectory(NetCommon)
 add_subdirectory(NetClient)

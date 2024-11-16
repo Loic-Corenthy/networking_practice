@@ -1,7 +1,7 @@
-foreach(TARGET_NAME boost_example1 boost_example2 boost_example3)
+foreach(TARGET_NAME boost_tutorial1 boost_tutorial2 boost_tutorial3)
   add_executable(${TARGET_NAME})
 
-  string(SUBSTRING ${TARGET_NAME} 6 8 FILE_NAME)
+  string(SUBSTRING ${TARGET_NAME} 6 9 FILE_NAME)
 
   target_sources(${TARGET_NAME}
     PRIVATE
