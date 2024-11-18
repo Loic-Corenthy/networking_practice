@@ -12,6 +12,11 @@ foreach(SOURCE_FILE_NAME ${ALL_SOURCE_FILE_NAMES})
 
   add_executable(${TARGET_NAME})
 
+  target_compile_definitions(${TARGET_NAME}
+    PUBLIC
+      ASIO_STANDALONE
+  )
+
   target_sources(${TARGET_NAME}
     PRIVATE
       src/${SOURCE_FILE_NAME}.cpp
