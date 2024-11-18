@@ -90,8 +90,9 @@ int main()
             char d;
             cin >> d;
             io_ctx.stop();
-        }, std::ref(io_ctx));
-        
+        },
+        std::ref(io_ctx));
+
         io_ctx.run();
 
         user_input.join();

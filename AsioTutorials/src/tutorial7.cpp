@@ -14,7 +14,7 @@ string make_daytime()
 }
 
 int main()
-{     
+{
     try
     {
         asio::io_context io_context;
@@ -22,7 +22,7 @@ int main()
         tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 13));
 
         bool run = true;
-        while(run)
+        while (run)
         {
             std::cout << "Waiting for connection...\n";
 
@@ -35,7 +35,7 @@ int main()
 
             std::error_code ignored_error;
             asio::write(socket, asio::buffer(message), ignored_error);
-            
+
             std::cout << "Keep running?\n";
             char answer;
             std::cin >> answer;
@@ -48,6 +48,6 @@ int main()
         std::cerr << e.what() << '\n';
     }
 
-    std::cout <<  "Bye!\n";
+    std::cout << "Bye!\n";
     return EXIT_SUCCESS;
 }

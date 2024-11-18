@@ -9,19 +9,21 @@ project(learning_asio
 
 Include(FetchContent)
 
-FetchContent_Declare(
-  asio
-  GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
-  GIT_TAG        asio-1-31-0
+FetchContent_Declare(asio
+  GIT_REPOSITORY
+    https://github.com/chriskohlhoff/asio.git
+  GIT_TAG
+    asio-1-31-0
 )
 
 FetchContent_MakeAvailable(asio)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/build/${CMAKE_BUILD_TYPE}/_deps/asio-src")
 
-FetchContent_Declare(
-    Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v3.5.0
+FetchContent_Declare(Catch2
+  GIT_REPOSITORY
+    https://github.com/catchorg/Catch2.git
+  GIT_TAG
+    v3.5.0
 )
 
 FetchContent_MakeAvailable(Catch2)
