@@ -2,26 +2,28 @@
 #include <iostream>
 #include <functional>
 
+using namespace std;
+
 class Printer
 {
 public:
     Printer(asio::io_context& io)
-    :_io(io),
-     _timer(_io, asio::chrono::seconds(1))
+    : _io(io)
+    , _timer(_io, asio::chrono::seconds(1))
     {
-        _timer.async_wait(std::bind(&Printer::print, this));
+        _timer.async_wait(bind(&Printer::print, this));
     }
 
     void print()
     {
         if (_counter < 5)
         {
-            std::cout << "Count is  " << _counter << '\n';
+            cout << "Count is  " << _counter << '\n';
             _timer.expires_from_now(asio::chrono::seconds(1));
             _counter++;
 
-            _timer.async_wait(std::bind(&Printer::print, this));
-        }        
+            _timer.async_wait(bind(&Printer::print, this));
+        }
     }
 
     int counter() const
@@ -30,18 +32,17 @@ public:
     }
 
 private:
-    asio::io_context& _io;
+    asio::io_context&  _io;
     asio::steady_timer _timer;
-    int _counter = 0;
+    int                _counter = 0;
 };
 
 int main()
 {
     asio::io_context io;
-    Printer printer(io);
+    Printer          printer(io);
     io.run();
 
-    std::cout << "The final count is " << printer.counter() << '\n';
+    cout << "The final count is " << printer.counter() << '\n';
     return 0;
 }
-

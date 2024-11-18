@@ -1,9 +1,11 @@
 #include <asio.hpp>
+
 #include <iostream>
 #include <functional>
 #include <array>
 
 using asio::ip::tcp;
+using namespace std;
 
 int main(int argc, char const* argv[])
 {
@@ -12,7 +14,7 @@ int main(int argc, char const* argv[])
         if (argc != 2)
         {
             // Can run it as "./boost_tutorial6 localhost" when running ./boost_tutorial7 locally
-            std::cerr << "Usage: boost_tutorial6 <host>\n";
+            cerr << "Usage: boost_tutorial6 <host>\n";
             return EXIT_FAILURE;
         }
 
@@ -26,7 +28,7 @@ int main(int argc, char const* argv[])
 
         while(true)
         {
-            std::array<char, 128> buffer;
+            array<char, 128> buffer;
             asio::error_code ec;
 
             size_t length = socket.read_some(asio::buffer(buffer), ec);
@@ -40,13 +42,13 @@ int main(int argc, char const* argv[])
                 throw asio::system_error(ec);
             }
 
-            std::cout.write(buffer.data(), length);
+            cout.write(buffer.data(), length);
         }
 
     }
-    catch (const std::exception& e)
+    catch (const exception& e)
     {
-        std::cerr << "Exception: " << e.what() << '\n';
+        cerr << "Exception: " << e.what() << '\n';
     }
 
     return 0;

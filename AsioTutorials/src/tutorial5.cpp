@@ -3,6 +3,8 @@
 #include <functional>
 #include <thread>
 
+using namespace std;
+
 class Printer
 {
 public:
@@ -11,19 +13,19 @@ public:
     , _timer1(io, asio::chrono::seconds(1))
     , _timer2(io, asio::chrono::seconds(1))
     {
-        _timer1.async_wait(asio::bind_executor(_strand, std::bind(&Printer::print1, this)));
-        _timer2.async_wait(asio::bind_executor(_strand, std::bind(&Printer::print2, this)));
+        _timer1.async_wait(asio::bind_executor(_strand, bind(&Printer::print1, this)));
+        _timer2.async_wait(asio::bind_executor(_strand, bind(&Printer::print2, this)));
     }
 
     void print1()
     {
         if (_counter < 10)
         {
-            std::cout << "Timer 1: Count is  " << _counter << '\n';
+            cout << "Timer 1: Count is  " << _counter << '\n';
             _timer1.expires_from_now(asio::chrono::seconds(1));
             _counter++;
 
-            _timer1.async_wait(asio::bind_executor(_strand, std::bind(&Printer::print1, this)));
+            _timer1.async_wait(asio::bind_executor(_strand, bind(&Printer::print1, this)));
         }
     }
 
@@ -31,11 +33,11 @@ public:
     {
         if (_counter < 10)
         {
-            std::cout << "Timer 2: Count is  " << _counter << '\n';
+            cout << "Timer 2: Count is  " << _counter << '\n';
             _timer2.expires_from_now(asio::chrono::seconds(1));
             _counter++;
 
-            _timer2.async_wait(asio::bind_executor(_strand, std::bind(&Printer::print2, this)));
+            _timer2.async_wait(asio::bind_executor(_strand, bind(&Printer::print2, this)));
         }
     }
 
@@ -55,10 +57,10 @@ int main()
 {
     asio::io_context io;
     Printer          printer(io);
-    std::thread      t([&io]() { io.run(); });
+    thread      t([&io]() { io.run(); });
     io.run();
 
-    std::cout << "The final count is " << printer.counter() << '\n';
+    cout << "The final count is " << printer.counter() << '\n';
     t.join();
     return 0;
 }

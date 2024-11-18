@@ -6,12 +6,7 @@
 #include <string>
 
 using asio::ip::udp;
-
-using std::array;
-using std::cout;
-using std::endl;
-using std::string;
-using std::cin;
+using namespace std;
 
 string make_daytime()
 {
@@ -48,9 +43,9 @@ int main()
             run = answer == 'y';
         }
     }
-    catch (const std::exception& e)
+    catch (const exception& e)
     {
-        std::cerr << e.what() << '\n';
+        cerr << e.what() << '\n';
     }
 
     return EXIT_SUCCESS;

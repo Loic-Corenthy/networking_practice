@@ -4,7 +4,7 @@
 #include <string>
 
 using asio::ip::tcp;
-using std::string;
+using namespace std;
 
 string make_daytime()
 {
@@ -24,30 +24,30 @@ int main()
         bool run = true;
         while (run)
         {
-            std::cout << "Waiting for connection...\n";
+            cout << "Waiting for connection...\n";
 
             tcp::socket socket(io_context);
             acceptor.accept(socket);
 
-            std::cout << "Socket accepted\n";
+            cout << "Socket accepted\n";
 
-            std::string message = make_daytime();
+            string message = make_daytime();
 
-            std::error_code ignored_error;
+            error_code ignored_error;
             asio::write(socket, asio::buffer(message), ignored_error);
 
-            std::cout << "Keep running?\n";
+            cout << "Keep running?\n";
             char answer;
-            std::cin >> answer;
+            cin >> answer;
 
             run = answer == 'y';
         }
     }
-    catch (const std::exception& e)
+    catch (const exception& e)
     {
-        std::cerr << e.what() << '\n';
+        cerr << e.what() << '\n';
     }
 
-    std::cout << "Bye!\n";
+    cout << "Bye!\n";
     return EXIT_SUCCESS;
 }

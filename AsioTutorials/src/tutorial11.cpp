@@ -9,17 +9,7 @@
 #include <thread>
 
 using asio::ip::udp;
-
-using std::array;
-using std::bind;
-using std::cin;
-using std::cout;
-using std::error_code;
-using std::make_shared;
-using std::shared_ptr;
-using std::size_t;
-using std::string;
-using std::thread;
+using namespace std;
 
 string make_daytime()
 {
@@ -91,15 +81,15 @@ int main()
             cin >> d;
             io_ctx.stop();
         },
-        std::ref(io_ctx));
+        ref(io_ctx));
 
         io_ctx.run();
 
         user_input.join();
     }
-    catch (const std::exception& e)
+    catch (const exception& e)
     {
-        std::cerr << e.what() << '\n';
+        cerr << e.what() << '\n';
     }
 
 

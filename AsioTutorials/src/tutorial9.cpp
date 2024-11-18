@@ -4,12 +4,13 @@
 #include <iostream>
 
 using asio::ip::udp;
+using namespace std;
 
 int main(int argc, char const* argv[])
 {
     if (argc != 2)
     {
-        std::cerr << "Usage: ./boost_tutorial9 <host>\n";
+        cerr << "Usage: ./boost_tutorial9 <host>\n";
         return EXIT_FAILURE;
     }
 
@@ -23,20 +24,20 @@ int main(int argc, char const* argv[])
         udp::socket socket(io_ctx);
         socket.open(udp::v4());
 
-        std::array<char, 1> send_buffer = {};
+        array<char, 1> send_buffer = {};
         socket.send_to(asio::buffer(send_buffer), receiver_endpoint);
 
-        std::array<char, 128> receive_buffer = {};
+        array<char, 128> receive_buffer = {};
         udp::endpoint         sender_endpoint;
-        const std::size_t     length = socket.receive_from(asio::buffer(receive_buffer), sender_endpoint);
+        const size_t     length = socket.receive_from(asio::buffer(receive_buffer), sender_endpoint);
 
-        std::cout.write(receive_buffer.data(), length);
+        cout.write(receive_buffer.data(), length);
 
-        std::cout << "Sender IP address is " << sender_endpoint.address().to_string() << '\n';
+        cout << "Sender IP address is " << sender_endpoint.address().to_string() << '\n';
     }
-    catch (const std::exception& e)
+    catch (const exception& e)
     {
-        std::cerr << e.what() << '\n';
+        cerr << e.what() << '\n';
     }
 
     return EXIT_SUCCESS;

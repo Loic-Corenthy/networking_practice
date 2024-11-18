@@ -7,11 +7,7 @@
 #include <string>
 
 using asio::ip::tcp;
-
-using std::enable_shared_from_this;
-using std::make_shared;
-using std::shared_ptr;
-using std::string;
+using namespace std;
 
 string make_daytime()
 {
@@ -25,7 +21,7 @@ class TCPConnection : public enable_shared_from_this<TCPConnection>
 public:
     static shared_ptr<TCPConnection> create(asio::io_context& io_context)
     {
-        std::cout << "Create new connection\n";
+        cout << "Create new connection\n";
         return shared_ptr<TCPConnection>(new TCPConnection(io_context));
     }
 
@@ -36,13 +32,12 @@ public:
 
     void start()
     {
-        std::cout << "New connection: start\n";
+        cout << "New connection: start\n";
         _message = make_daytime();
 
-        asio::async_write(
-        _socket,
-        asio::buffer(_message),
-        std::bind(&TCPConnection::handle_write, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+        asio::async_write(_socket,
+                          asio::buffer(_message),
+                          bind(&TCPConnection::handle_write, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
     }
 
 private:
@@ -51,11 +46,11 @@ private:
     {
     }
 
-    void handle_write(const asio::error_code& ec, std::size_t byte_transferred)
+    void handle_write(const asio::error_code& ec, size_t byte_transferred)
     {
         if (!ec)
         {
-            std::cout << "Transferred " << byte_transferred << " bytes\n";
+            cout << "Transferred " << byte_transferred << " bytes\n";
         }
     }
 
@@ -79,10 +74,10 @@ private:
     {
         auto new_connection = TCPConnection::create(_context);
 
-        _acceptor.async_accept(new_connection->get_socket(), std::bind(&TCPServer::handle_accept, this, new_connection, asio::placeholders::error));
+        _acceptor.async_accept(new_connection->get_socket(), bind(&TCPServer::handle_accept, this, new_connection, asio::placeholders::error));
     }
 
-    void handle_accept(std::shared_ptr<TCPConnection> new_connection, const asio::error_code& ec)
+    void handle_accept(shared_ptr<TCPConnection> new_connection, const asio::error_code& ec)
     {
         if (!ec)
         {
@@ -105,9 +100,9 @@ int main()
         TCPServer        server(io_context);
         io_context.run();
     }
-    catch (const std::exception& e)
+    catch (const exception& e)
     {
-        std::cerr << e.what() << '\n';
+        cerr << e.what() << '\n';
     }
 
     return EXIT_SUCCESS;
