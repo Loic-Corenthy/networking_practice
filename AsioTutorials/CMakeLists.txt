@@ -21,4 +21,3 @@ foreach(SOURCE_FILE_NAME ${ALL_SOURCE_FILE_NAMES})
 
   default_configuration(${TARGET_NAME})
 endforeach()
-
