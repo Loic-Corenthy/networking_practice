@@ -73,25 +73,21 @@ int main()
         asio::io_context io_ctx;
         UDPServer        server(io_ctx);
 
-        auto user_input = thread(
-        [](asio::io_context& io_ctx)
-        {
-            cout << "Enter any character to stop\n";
-            char d;
-            cin >> d;
-            io_ctx.stop();
-        },
-        ref(io_ctx));
+        auto run_io_ctx = [&io_ctx]() { io_ctx.run(); };
 
-        io_ctx.run();
+        auto io_ctx_thread = thread(run_io_ctx);
 
-        user_input.join();
+        cout << "Enter any character to stop\n";
+        char d;
+        cin >> d;
+
+        io_ctx.stop();
+        io_ctx_thread.join();
     }
     catch (const exception& e)
     {
         cerr << e.what() << '\n';
     }
-
 
     return EXIT_SUCCESS;
 }
