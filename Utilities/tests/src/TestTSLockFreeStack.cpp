@@ -88,7 +88,7 @@ TEST_CASE("Multi threaded", "[test][internal]")
             return true;
         };
 
-        future<bool> inserted_done = async(insert_elements, std::ref(stack), total_element_count);
+        future<bool> inserted_done = async(std::launch::async, insert_elements, std::ref(stack), total_element_count);
 
 
         WHEN("Other threads retreive those elements")
@@ -114,9 +114,9 @@ TEST_CASE("Multi threaded", "[test][internal]")
 
             atomic<bool> are_all_inserted = false;
 
-            future<tuple<int, int>> processed0 = async(get_elements, std::ref(stack), std::ref(are_all_inserted));
-            future<tuple<int, int>> processed1 = async(get_elements, std::ref(stack), std::ref(are_all_inserted));
-            future<tuple<int, int>> processed2 = async(get_elements, std::ref(stack), std::ref(are_all_inserted));
+            future<tuple<int, int>> processed0 = async(std::launch::async, get_elements, std::ref(stack), std::ref(are_all_inserted));
+            future<tuple<int, int>> processed1 = async(std::launch::async, get_elements, std::ref(stack), std::ref(are_all_inserted));
+            future<tuple<int, int>> processed2 = async(std::launch::async, get_elements, std::ref(stack), std::ref(are_all_inserted));
 
 
             THEN("The input is the same as the output (i.e. same count and same total)")
