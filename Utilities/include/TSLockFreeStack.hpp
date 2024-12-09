@@ -47,22 +47,20 @@ namespace LCNS::ThreadSafe
     template <typename Data>
     inline std::shared_ptr<Data> LockFreeStack<Data>::pop()
     {
-        ++_threads_in_pop;
+        std::atomic<void*>& hazard_pointer = get_hazard_pointer_for_current_thread();
 
         Node* old_head = _head.load();
-        while (old_head && !_head.compare_exchange_weak(old_head, old_head->next)) {}
+        Node* tmp = nullptr;
+
+        do
+        {
+            tmp = old_head;
+            hazard_pointer.store(old_head);
+            old_head = _head.load();
+        } while (old_head != tmp);
+        
 
         std::shared_ptr<Data> result;
-
-        if (old_head)
-        {
-            result.swap(old_head->data);
-            try_reclaim(old_head);
-        }
-        else
-        {
-            --_threads_in_pop;
-        }
 
         return result;
     }
