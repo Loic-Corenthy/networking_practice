@@ -17,10 +17,10 @@ protected:
 };
 
 
-class BenchmarkTSLockFreeStackFixture
+class BenchmarkTSLockFreeStack1Fixture
 {
 public:
-    BenchmarkTSLockFreeStackFixture()
+    BenchmarkTSLockFreeStack1Fixture()
     {
         std::printf("CTEST_FULL_OUTPUT\n");
     }

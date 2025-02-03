@@ -1,4 +1,4 @@
-#include "TSLockFreeStack.hpp"
+#include "TSLockFreeStack1.hpp"
 #include "Helper.hpp"
 #include "BenchmarkFixture.hpp"
 
@@ -12,7 +12,7 @@
 #include <vector>
 #include <numeric>
 
-using LCNS::ThreadSafe::LockFreeStack;
+using LCNS::ThreadSafe::LockFreeStack1;
 
 using namespace std;
 
@@ -77,7 +77,7 @@ namespace
                     {
                         sum += res;
                     }
-                    else if constexpr (std::is_same_v<STACK, LockFreeStack<long>>)
+                    else if constexpr (std::is_same_v<STACK, LockFreeStack1<long>>)
                     {
                         sum += *res;
                     }
@@ -123,7 +123,7 @@ namespace
     }
 }
 
-TEST_CASE_METHOD(BenchmarkTSLockFreeStackFixture, "Baseline with TestTSStack implementation", "[benchmark]")
+TEST_CASE_METHOD(BenchmarkTSLockFreeStack1Fixture, "Baseline with TestTSStack implementation", "[benchmark]")
 {
     BENCHMARK("TestTSStack with " + to_string(thread_count) + " threads and " + to_string(total_element_count) + " values")
     {
@@ -137,9 +137,9 @@ TEST_CASE_METHOD(BenchmarkTSLockFreeStackFixture, "Baseline with TestTSStack imp
         return 0;
     };
 
-    BENCHMARK("LockFreeStack with " + to_string(thread_count) + " threads and " + to_string(total_element_count) + " values")
+    BENCHMARK("LockFreeStack1 with " + to_string(thread_count) + " threads and " + to_string(total_element_count) + " values")
     {
-        LockFreeStack<long> stack;
+        LockFreeStack1<long> stack;
 
         future<bool> inserted_done = set_all_elements(stack, total_element_count);
 

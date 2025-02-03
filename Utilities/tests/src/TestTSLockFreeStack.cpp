@@ -1,4 +1,4 @@
-#include "TSLockFreeStack.hpp"
+#include "TSLockFreeStack1.hpp"
 
 #include "Helper.hpp"
 
@@ -10,7 +10,7 @@
 #include <tuple>
 #include <atomic>
 
-using LCNS::ThreadSafe::LockFreeStack;
+using LCNS::ThreadSafe::LockFreeStack1;
 
 using std::array;
 using std::async;
@@ -26,7 +26,7 @@ TEST_CASE("Basic", "[test][internal]")
 
     GIVEN("An empty stack")
     {
-        LockFreeStack<int> stack;
+        LockFreeStack1<int> stack;
 
         WHEN(to_string(count) + "Elements are added to it")
         {
@@ -47,7 +47,7 @@ TEST_CASE("Basic", "[test][internal]")
 
     GIVEN("An empty stack")
     {
-        LockFreeStack<TestData> stack;
+        LockFreeStack1<TestData> stack;
 
         WHEN(to_string(count) + "Elements are added to it")
         {
@@ -76,9 +76,9 @@ TEST_CASE("Multi threaded", "[test][internal]")
 
     GIVEN("A stack with a thread adding elements to it")
     {
-        LockFreeStack<int> stack;
+        LockFreeStack1<int> stack;
 
-        auto insert_elements = [](LockFreeStack<int>& stack, int count) -> bool
+        auto insert_elements = [](LockFreeStack1<int>& stack, int count) -> bool
         {
             for (int i = 1; i <= count; i++)
             {
@@ -93,7 +93,7 @@ TEST_CASE("Multi threaded", "[test][internal]")
 
         WHEN("Other threads retreive those elements")
         {
-            auto get_elements = [](LockFreeStack<int>& stack, atomic<bool>& all_inserted) -> tuple<int, int>
+            auto get_elements = [](LockFreeStack1<int>& stack, atomic<bool>& all_inserted) -> tuple<int, int>
             {
                 int  count = 0;
                 int  sum   = 0;

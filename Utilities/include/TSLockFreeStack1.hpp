@@ -6,7 +6,7 @@
 namespace LCNS::ThreadSafe
 {
     template <typename Data>
-    class LockFreeStack
+    class LockFreeStack1
     {
     public:
         void                  push(const Data& data);
@@ -37,7 +37,7 @@ namespace LCNS::ThreadSafe
     };
 
     template <typename Data>
-    inline void LockFreeStack<Data>::push(const Data& data)
+    inline void LockFreeStack1<Data>::push(const Data& data)
     {
         Node* new_node = new Node(data);
         new_node->next = _head.load();
@@ -45,7 +45,7 @@ namespace LCNS::ThreadSafe
     }
 
     template <typename Data>
-    inline std::shared_ptr<Data> LockFreeStack<Data>::pop()
+    inline std::shared_ptr<Data> LockFreeStack1<Data>::pop()
     {
         ++_threads_in_pop;
 
@@ -68,7 +68,7 @@ namespace LCNS::ThreadSafe
     }
 
     template <typename Data>
-    inline void LockFreeStack<Data>::try_reclaim(Node* old_head)
+    inline void LockFreeStack1<Data>::try_reclaim(Node* old_head)
     {
         if (_threads_in_pop.load() == 1)
         {
@@ -93,7 +93,7 @@ namespace LCNS::ThreadSafe
     }
 
     template <typename Data>
-    inline void LockFreeStack<Data>::chain_pending_nodes(Node* nodes)
+    inline void LockFreeStack1<Data>::chain_pending_nodes(Node* nodes)
     {
         Node* last = nodes;
 
@@ -106,20 +106,20 @@ namespace LCNS::ThreadSafe
     }
 
     template <typename Data>
-    inline void LockFreeStack<Data>::chain_pending_nodes(Node* first, Node* last)
+    inline void LockFreeStack1<Data>::chain_pending_nodes(Node* first, Node* last)
     {
         last->next = _to_be_deleted;
         while (!_to_be_deleted.compare_exchange_weak(last->next, first)) {}
     }
 
     template <typename Data>
-    inline void LockFreeStack<Data>::chain_pending_node(Node* node)
+    inline void LockFreeStack1<Data>::chain_pending_node(Node* node)
     {
         chain_pending_nodes(node, node);
     }
 
     template <typename Data>
-    inline void LockFreeStack<Data>::delete_nodes(Node* nodes)
+    inline void LockFreeStack1<Data>::delete_nodes(Node* nodes)
     {
         while (nodes)
         {

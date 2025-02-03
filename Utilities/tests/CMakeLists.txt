@@ -42,7 +42,7 @@ target_sources(testTSLockFreeStack
     PRIVATE
         src/Helper.hpp
         src/TestTSLockFreeStack.cpp
-        src/BenchmarkTSLockFreeStack.cpp
+        src/BenchmarkTSLockFreeStack1.cpp
 )
 
 add_test(NAME "Test lock free stack" COMMAND "$<TARGET_FILE:testTSLockFreeStack>" "[test]")

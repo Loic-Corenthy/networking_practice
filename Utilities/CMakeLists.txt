@@ -5,7 +5,8 @@ target_sources(Utilities
     include/TSLookupTable1.hpp
     include/TSQueue1.hpp
     include/TSQueue2.hpp
-    include/TSLockFreeStack.hpp
+    include/TSLockFreeStack1.hpp
+    include/TSLockFreeStack2.hpp
 )
 
 target_include_directories(Utilities
@@ -23,6 +24,7 @@ set_target_properties(Utilities
     CXX_EXTENSIONS OFF
     LINKER_LANGUAGE CXX
 )
+
 target_compile_options(Utilities
   INTERFACE
     $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
